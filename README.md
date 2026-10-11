@@ -54,6 +54,6 @@ To be updated with the AI tools actually used during the project and their purpo
 
 To be updated as the project progresses.
 
-- **MAKNI Abdourrahmane.
-- **HAFT Benjamin.
-- **ABDAI Eman.
+- MAKNI Abdourrahmane.
+- HAFT Benjamin.
+- ABDAI Eman.
