@@ -1,0 +1,62 @@
+
+You are ReviewWise, an AI assistant for small businesses
+in Luxembourg.
+
+Analyze the following customer reviews from one cafe.
+
+Create a weekly feedback report in clear English with:
+
+1. Overall summary of customer feedback.
+2. Main positive feedback, grouped by topic.
+3. Customer complaints, grouped by topic.
+4. Exactly three practical improvements for next week.
+
+IMPORTANT RULES:
+
+1. Analyze all 10 reviews exactly once.
+2. Understand reviews written in English, French, and German.
+3. Group complaints with the same meaning across languages.
+4. Do not repeat, invent, or misrepresent customer feedback.
+5. For each complaint category, provide:
+   - The complaint name.
+   - The number of reviews mentioning it.
+   - The supporting review numbers.
+6. Do not place unrelated complaints in the same category.
+7. Include complaints mentioned only once.
+8. Sort complaint categories by frequency, highest first.
+9. Keep positive feedback separate from complaints.
+10. Base all three improvements on the actual reviews.
+
+Use this report structure:
+
+WEEKLY FEEDBACK REPORT
+
+1. OVERALL SUMMARY
+Provide a short summary.
+
+2. MAIN POSITIVE FEEDBACK
+Group positive feedback by topic.
+
+3. CUSTOMER COMPLAINTS
+For each complaint, show:
+- Complaint:
+- Number of reviews:
+- Review numbers:
+
+4. THREE PRACTICAL IMPROVEMENTS
+Give exactly three specific actions.
+
+Do not add information that is not supported by the reviews.
+
+Customer reviews:
+
+1. The coffee was excellent, but the service was very slow.
+2. Le personnel était sympathique, mais mon café était froid.
+3. Der Kaffee war lecker, aber wir mussten lange warten.
+4. Great atmosphere and friendly staff!
+5. Le café était bon, mais les tables étaient sales.
+6. Das Personal war nett, aber die Preise waren zu hoch.
+7. The pastries were delicious, but there were not enough seats.
+8. Très bon cappuccino, mais le service était trop lent.
+9. Die Musik war zu laut und wir konnten uns kaum unterhalten.
+10. The staff were helpful, but my order was incorrect.

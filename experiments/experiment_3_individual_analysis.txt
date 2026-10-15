@@ -1,0 +1,44 @@
+Review number: 1
+Positive feedback: The coffee was excellent.
+Negative feedback: The service was very slow.
+
+Review number: 2
+Positive feedback:
+The staff was friendly.
+
+Negative feedback:
+The coffee was cold.
+
+Review number: 3
+Positive feedback: The coffee was delicious.
+Negative feedback: We had to wait a long time.
+
+Review number: 4
+Positive feedback: Great atmosphere and friendly staff!
+Negative feedback: None
+
+Review number: 5
+Positive feedback: The coffee was good.
+Negative feedback: The tables were dirty.
+
+Review number: 6
+Positive feedback: The staff was nice.
+Negative feedback: The prices were too high.
+
+Review number: 7
+Positive feedback:
+The pastries were delicious.
+
+Negative feedback:
+There were not enough seats.
+
+Review number: 8
+Positive feedback: Très bon cappuccino
+Negative feedback: le service était trop lent
+
+Review number: 9
+Negative feedback: The music was too loud and we could hardly have a conversation.
+
+Review number: 10
+Positive feedback: The staff were helpful.
+Negative feedback: My order was incorrect.
