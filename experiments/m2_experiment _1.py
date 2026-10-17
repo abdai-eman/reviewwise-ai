@@ -3,18 +3,28 @@
 # Multilingual customer reviews and weekly feedback
 
 # Fictional customer reviews from one cafe in Luxembourg
+
+# 10 fictional cafe reviews in 4 languages
 reviews = [
+    # English
     "The coffee was excellent, but the service was very slow.",
-    "Le personnel était sympathique, mais mon café était froid.",
-    "Der Kaffee war lecker, aber wir mussten lange warten.",
     "Great atmosphere and friendly staff!",
+    "The staff were helpful, but my order was incorrect.",
+
+    # French
+    "Le personnel était sympathique, mais mon café était froid.",
     "Le café était bon, mais les tables étaient sales.",
+
+    # German
+    "Der Kaffee war lecker, aber wir mussten lange warten.",
     "Das Personal war nett, aber die Preise waren zu hoch.",
-    "The pastries were delicious, but there were not enough seats.",
-    "Très bon cappuccino, mais le service était trop lent.",
-    "Die Musik war zu laut und wir konnten uns kaum unterhalten.",
-    "The staff were helpful, but my order was incorrect."
+
+    # Luxembourgish
+    "De Service war ganz lues an ech hu laang op mäi Kaffi gewaart.",
+    "D'Iesse war ganz gutt, mee d'Personal war net frëndlech.",
+    "De Kaffi war kal an d'Präisser waren ze héich."
 ]
+
 
 # Instructions for the AI model
 prompt = """

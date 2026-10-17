@@ -1,95 +1,71 @@
-# ReviewWise — M2 Experiment Commentary
+# M2 – AI Experiment Commentary
 
-## 1. Experiment Objective
+**Project:** ReviewWise  
+**Model:** Qwen2.5 (3B) via Ollama  
+**Dataset:** 10 fictional café reviews in English, French, German and Luxembourgish.
 
-We tested whether Qwen2.5 (3B), running locally through Ollama, could analyze multilingual café reviews and generate a useful weekly report.
+## Objective
 
-We used 10 fictional reviews written in English, French and German. The same reviews were used in all three experiments so we could compare the outputs.
+The objective was to compare three prompting approaches for generating a weekly customer feedback report. All three experiments used the same 10 reviews to make the comparison consistent.
 
-We checked whether the AI could identify positive feedback, group similar complaints, count complaints correctly and suggest three improvements.
+## Experiment 1 – Basic Prompt
 
-## 2. Experiment 1 — Basic Prompt
+**Method:** The model received all 10 reviews in one prompt and was asked to summarize positive feedback, group complaints and suggest three improvements.
 
-**Method:** We sent all 10 reviews to the model in one prompt and asked it to generate a weekly report.
+**Result:** The report was generated in **230.39 seconds**. It correctly identified slow service in reviews 1, 6 and 8 and recognized some Luxembourgish feedback.
 
-**Output:** `experiment_output_1.txt`
+**Problems:** It incorrectly grouped unrelated complaints, included wrong supporting reviews and mixed positive and negative feedback. Cold coffee and unfriendly staff were not listed as separate complaint categories.
 
-The AI generated a report, but we found several problems:
+**Conclusion:** The basic prompt generated a readable report but lacked reliable complaint grouping.
 
-- It repeated the same feedback multiple times.
-- It mixed unrelated complaints, including pricing and service issues.
-- It missed some complaints, such as cold coffee, limited seating and incorrect orders.
+## Experiment 2 – Improved Prompt
 
-For example, the report repeated feedback about helpful staff instead of correctly identifying all the different customer complaints.
+**Method:** The model received the same 10 reviews with stricter instructions requiring complaint categories, frequencies, supporting review numbers and exactly three improvements.
 
-**Our observation:** The model understood the general feedback but did not organize it accurately. We decided to test a more detailed prompt.
+**Result:** The report was generated in **153.44 seconds**. Its structure was clearer and it correctly identified the incorrect-order complaint in review 3.
 
-## 3. Experiment 2 — Improved Prompt
+**Problems:** Complaint counts remained inaccurate. Slow service appeared in three reviews (1, 6 and 8), but the model reported one. It referenced review 4 instead of review 5 for dirty tables, missed cold coffee and unfriendly staff, and undercounted high prices. The prompt explicitly mentioned English, French and German but omitted Luxembourgish.
 
-**Method:** We used the same reviews but added instructions to avoid repetition, group similar complaints, count them and provide supporting review numbers.
+**Conclusion:** The improved prompt produced better formatting but did not solve accuracy problems.
 
-**Output:** `experiment_output_2.txt`
+## Experiment 3 – Two-Stage Analysis
 
-The report was better organized, but the complaint counts and review numbers were incorrect.
+**Method:** The model first analyzed each of the 10 reviews individually, then generated a weekly report from those analyses.
 
-| Complaint | Correct result | AI result |
-|---|---|---|
-| Slow service | 3 reviews (1, 3, 8) | 4 reviews (1, 8, 9, 10) |
-| Dirty tables | 1 review (5) | 2 reviews (4, 5) |
-| High prices | 1 review (6) | 2 reviews (6, 7) |
-| Cold coffee | 1 review (2) | Missing |
-| Limited seating | 1 review (7) | Missing |
-| Loud music | 1 review (9) | Missing |
-| Incorrect order | 1 review (10) | Missing |
+**Result:** The experiment took **318.20 seconds**. Individual analysis correctly extracted most English, French and German feedback.
 
-For example, review 9 complained about loud music, but the model classified it as slow service. Review 7 complained about insufficient seating, but the model classified it as high prices.
+**Problems:** Luxembourgish understanding was inconsistent. Review 8's slow-service complaint was missed, review 9's positive food feedback was missed, and review 10's cold coffee and high prices were not understood. The final report incorrectly claimed seven slow-service complaints instead of three and three cleanliness complaints instead of one. It also omitted several complaint categories.
 
-**Our observation:** Clearer instructions improved the report's structure but did not solve the accuracy problems.
+**Conclusion:** The two-stage method made individual extraction errors visible but did not improve final-report accuracy. It was also the slowest approach.
 
-## 4. Experiment 3 — Two-Stage Analysis
+## Comparison
 
-**Method:** We divided the analysis into two stages.
+| Criterion | Experiment 1 | Experiment 2 | Experiment 3 |
+|---|---|---|---|
+| Method | Basic prompt | Improved prompt | Two-stage |
+| Reviews | 10 | 10 | 10 |
+| Languages | EN, FR, DE, LU | EN, FR, DE, LU | EN, FR, DE, LU |
+| Runtime | 230.39 s | 153.44 s | 318.20 s |
+| Report structure | Repetitive | Clear | Clear |
+| Complaint accuracy | Unreliable | Unreliable | Unreliable |
+| Luxembourgish handling | Partial | Weak | Weak |
 
-1. The model analyzed each review separately and extracted positive and negative feedback.
-2. The model combined those individual analyses into a weekly report.
+## Final Decision and Next Steps
 
-**Outputs:**
-- `experiment_3_individual_analysis.txt` — Results from the first stage.
-- `experiment_output_3.txt` — Final weekly report.
+**Experiment 2 produced the clearest report and was fastest in these runs**, but none of the three approaches reliably counted or grouped complaints.
 
-The first stage worked well. For example, the model correctly identified cold coffee in review 2, long waiting times in review 3 and an incorrect order in review 10.
+For the MVP, we propose using **Qwen2.5 (3B) through Ollama with structured individual review extraction and Python-based complaint counting**, followed by report generation. This extends Experiment 3; the Python validation step has not yet been implemented or tested.
 
-However, the final report still had errors:
+The next steps are to improve Luxembourgish recognition, validate extracted complaints against original reviews, and calculate complaint frequencies in Python rather than relying on AI-generated counts.
 
-- Slow service and long waiting times were treated as separate complaints, even though they describe the same issue.
-- Cold coffee was incorrectly attributed to review 3.
-- Limited seating in review 7 was incorrectly grouped with waiting times.
-- The incorrect order in review 10 was missing.
+If accuracy or processing speed remains insufficient, we will evaluate a stronger local model or a cloud API.
 
-**Our observation:** The individual analyses were mostly correct, but errors appeared when the model combined the results. This method made it easier to identify where mistakes happened.
+**Limitations of this evaluation:** The dataset contains only 10 fictional reviews, each method was run once, and the prompts did not all explicitly support Luxembourgish. Therefore, the results are preliminary rather than a definitive performance benchmark.
 
-## 5. Comparison of the Three Outputs
+## Use of AI Tools
 
-| Experiment | Approach | Main result |
-|---|---|---|
-| 1 | Basic prompt | Repeated information and incorrect complaint grouping |
-| 2 | Improved prompt | Better structure but incorrect counts and missing complaints |
-| 3 | Two-stage analysis | Better individual analysis but errors in the final report |
+We used **ChatGPT (OpenAI)** to assist with writing and improving the Python experiment code, developing and refining prompts, organizing the testing process, and analyzing the experiment results.
 
-All three experiments generated reports, but none produced completely accurate complaint counts and categories.
+All three experiments were executed locally using **Qwen2.5 (3B) through Ollama**. We reviewed the generated outputs, identified errors, and documented the findings ourselves.
 
-## 6. Conclusion and Next Step
-
-We selected the **two-stage approach from Experiment 3** as the starting point for our MVP because it allows us to check the results for each review before generating the final report.
-
-For the next version, we plan to use Python to validate complaint categories and counts instead of relying entirely on the AI.
-
-Our tests were limited to 10 fictional reviews, so we still need to test with more data. We also need to measure processing time, especially because Experiment 3 makes more model calls.
-
-## 7. Use of AI Tools
-
-We used ChatGPT to help generate the Python scripts, prepare prompts and troubleshoot coding problems.
-
-We used Ollama and Qwen2.5 (3B) to run the actual experiments.
-
-We executed the scripts in VS Code and compared the generated reports with the original reviews.
+ChatGPT was used as a development and learning assistant, not as the AI model generating the customer feedback reports.

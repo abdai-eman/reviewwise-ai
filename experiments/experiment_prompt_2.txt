@@ -51,12 +51,12 @@ Do not add information that is not supported by the reviews.
 Customer reviews:
 
 1. The coffee was excellent, but the service was very slow.
-2. Le personnel était sympathique, mais mon café était froid.
-3. Der Kaffee war lecker, aber wir mussten lange warten.
-4. Great atmosphere and friendly staff!
+2. Great atmosphere and friendly staff!
+3. The staff were helpful, but my order was incorrect.
+4. Le personnel était sympathique, mais mon café était froid.
 5. Le café était bon, mais les tables étaient sales.
-6. Das Personal war nett, aber die Preise waren zu hoch.
-7. The pastries were delicious, but there were not enough seats.
-8. Très bon cappuccino, mais le service était trop lent.
-9. Die Musik war zu laut und wir konnten uns kaum unterhalten.
-10. The staff were helpful, but my order was incorrect.
+6. Der Kaffee war lecker, aber wir mussten lange warten.
+7. Das Personal war nett, aber die Preise waren zu hoch.
+8. De Service war ganz lues an ech hu laang op mäi Kaffi gewaart.
+9. D'Iesse war ganz gutt, mee d'Personal war net frëndlech.
+10. De Kaffi war kal an d'Präisser waren ze héich.

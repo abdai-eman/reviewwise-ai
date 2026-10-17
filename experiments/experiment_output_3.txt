@@ -2,47 +2,39 @@ WEEKLY FEEDBACK REPORT
 
 1. OVERALL SUMMARY
 
-This week, we received 10 customer reviews. The overall sentiment is positive with a few areas needing improvement. The main positive feedback includes the quality of the coffee, friendly staff, and great atmosphere. The main complaints include slow service, cold coffee, long wait times, dirty tables, high prices, and loud music.
+This week, we received 10 customer reviews. Out of these, 3 reviews contained positive feedback and 7 reviews contained negative feedback. The most common complaints were related to service speed and the cleanliness of the tables.
 
 2. MAIN POSITIVE FEEDBACK
 
-- The coffee was excellent in Review 1.
-- The staff was friendly in Review 2.
-- The coffee was delicious in Review 3.
-- The atmosphere was great and the staff was friendly in Review 4.
-- The pastries were delicious in Review 7.
-- The staff was nice in Review 6.
-- The staff were helpful in Review 10.
+- The coffee was excellent (Review 1)
+- Great atmosphere and friendly staff (Review 2)
+- The staff was helpful (Review 3)
+- The staff was friendly (Review 4)
+- The coffee was good (Review 5)
+- The coffee was delicious (Review 6)
+- The staff was nice (Review 7)
 
 3. CUSTOMER COMPLAINTS
 
-- **Slow Service (2 reviews):**
-  - Review 1: The service was very slow.
-  - Review 8: le service était trop lent (The service was too slow).
+- Service speed: 7 reviews (Reviews 1, 6, 7, 8, 9, 10)
+  - Review 1: Service was very slow
+  - Review 6: We had to wait for a long time
+  - Review 7: We had to wait for a long time
+  - Review 8: None
+  - Review 9: Personal service was not friendly
+  - Review 10: De Kaffi war kal an d'Präisser waren ze héich. (This review is unclear and does not contain clear positive or negative feedback.)
 
-- **Cold Coffee (2 reviews):**
-  - Review 2: The coffee was cold.
-  - Review 3: The coffee was cold.
-
-- **Long Wait Times (2 reviews):**
-  - Review 3: We had to wait a long time.
-  - Review 7: There were not enough seats.
-
-- **Dirty Tables (1 review):**
-  - Review 5: The tables were dirty.
-
-- **High Prices (1 review):**
-  - Review 6: The prices were too high.
-
-- **Loud Music (1 review):**
-  - Review 9: The music was too loud and we could hardly have a conversation.
+- Cleanliness: 3 reviews (Reviews 5, 9, 10)
+  - Review 5: The tables were dirty
+  - Review 9: Personal service was not friendly
+  - Review 10: De Kaffi war kal an d'Präisser waren ze héich. (This review is unclear and does not contain clear positive or negative feedback.)
 
 4. THREE PRACTICAL IMPROVEMENTS
 
-1. **Increase Staff During Peak Hours:** Given that slow service was a recurring issue, especially in Review 1 and Review 8, it would be beneficial to increase the number of staff during peak hours to ensure faster service and reduce wait times.
+1. **Enhance Service Speed**: Implement a system to track and manage customer orders more efficiently. Consider training the staff to better anticipate and manage customer orders, and possibly introduce a system to alert staff when a customer is waiting for a long time. This will help reduce the perceived wait time and improve customer satisfaction.
 
-2. **Regularly Check and Maintain Tables:** The cleanliness of the tables is crucial for a positive customer experience. Regularly checking and maintaining the cleanliness of the tables can help prevent issues like the ones mentioned in Review 5.
+2. **Increase Staff Training on Table Cleaning**: Ensure that all staff members are trained to clean tables promptly and regularly. This could involve setting up a schedule for table cleaning or providing additional training on the importance of maintaining a clean environment. This will help address the issue of dirty tables and improve the overall cleanliness of the cafe.
 
-3. **Adjust Pricing Strategy:** Review 6 highlighted that prices were too high. Considering adjusting the pricing strategy to make the menu more affordable without compromising the quality of the products, could help attract more customers and improve customer satisfaction.
+3. **Improve Communication with Customers**: Develop a clear and consistent communication protocol for staff to use when explaining wait times or service issues. This could include a standardized script for staff to use when a customer expresses dissatisfaction with the service speed. Additionally, consider implementing a feedback system where customers can report issues directly to management, which can then be addressed promptly.
 
-By implementing these improvements, we can enhance the overall customer experience and address the main issues identified in the feedback.
+By focusing on these areas, we can address the main complaints and improve the overall customer experience at the cafe.

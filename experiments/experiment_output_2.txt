@@ -1,19 +1,32 @@
 WEEKLY FEEDBACK REPORT
 
 1. OVERALL SUMMARY
-This week, customers provided a mix of positive and negative feedback. The cafe received praise for its atmosphere, staff, and coffee quality, but also faced issues with service speed, cleanliness, and pricing. The cafe's atmosphere and staff were consistently appreciated, while service speed and cleanliness were the most frequently mentioned issues.
+The cafe received a mix of positive and negative feedback this week. Customers appreciated the coffee quality and friendly staff, but also noted slow service, incorrect orders, dirty tables, and high prices. The cafe needs to address these issues to improve customer satisfaction.
 
 2. MAIN POSITIVE FEEDBACK
-- Atmosphere and Staff: Customers appreciated the cafe's atmosphere and the friendly staff.
-- Coffee Quality: The quality of the coffee was consistently praised.
-- Pastries: The pastries were noted as delicious.
+- Coffee Quality: Customers praised the quality of the coffee, indicating that it was a strong point of the cafe.
+- Service: Friendly and helpful staff were noted as positive aspects.
+- Atmosphere: Customers appreciated the ambiance of the cafe.
 
 3. CUSTOMER COMPLAINTS
-- Service Speed: Customers mentioned that service was slow in 4 reviews (Reviews 1, 8, 9, and 10).
-- Cleanliness: Customers noted that tables were dirty in 2 reviews (Reviews 4 and 5).
-- Pricing: Customers complained about high prices in 2 reviews (Reviews 6 and 7).
+- Slow Service: 
+  - Complaint: The service was very slow.
+  - Number of reviews: 1
+  - Review numbers: 1, 10
+- Incorrect Orders:
+  - Complaint: My order was incorrect.
+  - Number of reviews: 1
+  - Review numbers: 3
+- Dirty Tables:
+  - Complaint: The tables were dirty.
+  - Number of reviews: 1
+  - Review numbers: 4
+- High Prices:
+  - Complaint: The prices were too high.
+  - Number of reviews: 1
+  - Review numbers: 7
 
 4. THREE PRACTICAL IMPROVEMENTS
-1. Address the issue of slow service by training the staff to manage orders more efficiently and possibly implementing a system to alert staff when orders are behind schedule.
-2. Increase the frequency of cleaning tables and restocking supplies to ensure they are always clean and in good condition.
-3. Review and potentially adjust the pricing strategy to ensure it aligns with customer expectations and remains competitive in the market.
+1. **Speed Up Service:** Implement a system to manage customer orders more efficiently, such as using a queue system or a digital ordering system to reduce wait times. This can be done by training staff to manage orders more quickly and by possibly investing in a more efficient point-of-sale system.
+2. **Quality Control for Orders:** Establish a quality control process for orders to ensure accuracy and prompt correction of any mistakes. This could involve cross-checking orders with a supervisor or using a system that alerts staff to potential errors.
+3. **Regular Cleaning of Tables:** Schedule regular cleaning of tables to maintain a clean and hygienic environment. This can be done by having a dedicated cleaning team or by training staff to clean tables more frequently during their breaks.
