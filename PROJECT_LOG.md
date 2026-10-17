@@ -69,3 +69,58 @@ https://statistiques.public.lu/dam-assets/catalogue-publications/luxembourg-en-c
 ### Writing Improvement Tool Used
 
 Grammarly was used to check grammar and improve wording.
+______________________________________________________________________________________________---
+## M2 – Technology Exploration and Project Proposal
+**Date:** 19 October 2026
+
+### 1. Technology Comparison
+We compared two AI approaches for ReviewWise:
+- **Qwen2.5 (3B) with Ollama:** Runs locally, has no API fees, and keeps customer reviews on the user's computer.
+- **GPT-4.1 mini API:** Cloud-based alternative with usage-based pricing.
+
+We selected Qwen2.5 with Ollama because it is free to use locally, offers better control over data, and has already been tested.
+
+### 2. AI Experiment
+We tested Qwen2.5 (3B) using 10 fictional multilingual customer reviews.
+
+We conducted three experiments to analyze customer complaints and generate weekly improvement reports.
+
+The results showed that the model could understand multilingual reviews and identify complaints, but sometimes made mistakes when grouping similar complaints and counting their frequency.
+
+We decided to improve accuracy using Python validation.
+
+The experiment scripts, saved outputs, and instructions are available in the repository.
+
+### 3. Chosen Approach and Limitations
+We chose Qwen2.5 (3B) with Ollama.
+
+Current limitations:
+- Incorrect complaint grouping and counts.
+- Limited testing with only 10 fictional reviews; Luxembourgish remains untested.
+- Multiple AI calls may increase processing time.
+
+We may consider a larger local model or a cloud API if accuracy or performance remains insufficient.
+
+### 4. Architecture
+The planned system will accept multilingual customer reviews, analyze them locally using Python, Ollama, and Qwen2.5, and generate weekly reports containing recurring complaints and improvement suggestions.
+
+### 5. Cost Estimate
+Ollama runs the model locally without API fees.
+
+For one weekly report containing 10 reviews:
+
+11 AI calls × €0 = **€0 API cost per report**.
+
+Electricity and hardware costs have not yet been measured.
+
+### 6. MVP Development Plan
+- **26 October:** Improve AI analysis and complaint counting — Abdourrahmane Makni.
+- **5 November:** Build review input and weekly report interface — Benjamin Haft.
+- **10 November:** Test multilingual reviews — Eman Abdai.
+- **15 November:** Integrate components, fix bugs, and record demo — All members.
+
+**MVP deadline:** 16 November 2026.
+
+### 7. Repository
+The project repository contains the AI experiments, saved results, and documentation.
+
