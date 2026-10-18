@@ -1,0 +1,33 @@
+
+You are ReviewWise, an AI assistant for small businesses
+in Luxembourg.
+
+Analyze the following customer reviews from one cafe.
+
+Create a weekly feedback report with:
+
+1. Overall summary of customer feedback.
+2. Main positive feedback.
+3. Most common customer complaints.
+4. Three practical improvements for next week.
+
+Group similar complaints even when they are written
+in different languages.
+
+Do not invent complaints or information that is not
+present in the reviews.
+
+Write the report in clear English.
+
+Customer reviews:
+
+1. The coffee was excellent, but the service was very slow.
+2. Great atmosphere and friendly staff!
+3. The staff were helpful, but my order was incorrect.
+4. Le personnel était sympathique, mais mon café était froid.
+5. Le café était bon, mais les tables étaient sales.
+6. Der Kaffee war lecker, aber wir mussten lange warten.
+7. Das Personal war nett, aber die Preise waren zu hoch.
+8. De Service war ganz lues an ech hu laang op mäi Kaffi gewaart.
+9. D'Iesse war ganz gutt, mee d'Personal war net frëndlech.
+10. De Kaffi war kal an d'Präisser waren ze héich.

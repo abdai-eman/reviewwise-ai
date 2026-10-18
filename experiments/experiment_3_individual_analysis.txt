@@ -7,19 +7,19 @@ Positive feedback: Great atmosphere and friendly staff.
 Negative feedback: None
 
 Review number: 3
-Positive feedback: The staff were helpful.
-Negative feedback: My order was incorrect.
+Positive feedback: None
+Negative feedback: The order was incorrect.
 
 Review number: 4
-Positive feedback:
-The staff was friendly.
-
-Negative feedback:
-The coffee was cold.
+Positive feedback: The staff was friendly.
+Negative feedback: The coffee was cold.
 
 Review number: 5
-Positive feedback: The coffee was good.
-Negative feedback: The tables were dirty.
+Positive feedback:
+None
+
+Negative feedback:
+The tables were dirty.
 
 Review number: 6
 Positive feedback: The coffee was delicious.
@@ -30,13 +30,14 @@ Positive feedback: The staff was nice.
 Negative feedback: The prices were too high.
 
 Review number: 8
-Positive feedback: None
-Negative feedback: None
+Negative feedback: De Service war ganz lues an ech hu laang op mäi Kaffi gewaart. (Translation: The service was very bad and I drank bad coffee.)
+
+None
 
 Review number: 9
 Positive feedback: None
-Negative feedback: The personal service was not friendly.
+Negative feedback: The customer service was not friendly.
 
 Review number: 10
 Positive feedback: None
-Negative feedback: De Kaffi war kal an d'Präisser waren ze héich. (This review appears to be in a language other than English, French, or German, and does not contain clear positive or negative feedback.)
+Negative feedback: De Kaffi war kal an d'Präisser waren ze héich. (This review appears to be in Luxembourgish and translates to "The coffee was bad and the prices were high." which is a negative feedback.)

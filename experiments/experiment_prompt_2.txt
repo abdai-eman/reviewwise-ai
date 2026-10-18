@@ -14,7 +14,7 @@ Create a weekly feedback report in clear English with:
 IMPORTANT RULES:
 
 1. Analyze all 10 reviews exactly once.
-2. Understand reviews written in English, French, and German.
+2. Understand reviews written in English, French, German, and Luxembourgish.
 3. Group complaints with the same meaning across languages.
 4. Do not repeat, invent, or misrepresent customer feedback.
 5. For each complaint category, provide:

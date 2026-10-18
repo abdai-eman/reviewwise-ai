@@ -1,4 +1,5 @@
-
+import json
+import time
 # ReviewWise - M2 Experiment 2
 # Improved prompt for multilingual customer review analysis
 
@@ -9,25 +10,11 @@ from ollama import chat
 # Same 10 reviews as Experiment 1 for a fair comparison
 
 # 10 fictional cafe reviews in 4 languages
-reviews = [
-    # English
-    "The coffee was excellent, but the service was very slow.",
-    "Great atmosphere and friendly staff!",
-    "The staff were helpful, but my order was incorrect.",
+# Load the same 10 reviews used in all experiments
+reviews_path = Path(__file__).parent / "reviews.json"
 
-    # French
-    "Le personnel était sympathique, mais mon café était froid.",
-    "Le café était bon, mais les tables étaient sales.",
-
-    # German
-    "Der Kaffee war lecker, aber wir mussten lange warten.",
-    "Das Personal war nett, aber die Preise waren zu hoch.",
-
-    # Luxembourgish
-    "De Service war ganz lues an ech hu laang op mäi Kaffi gewaart.",
-    "D'Iesse war ganz gutt, mee d'Personal war net frëndlech.",
-    "De Kaffi war kal an d'Präisser waren ze héich."
-]
+with open(reviews_path, "r", encoding="utf-8") as file:
+    reviews = json.load(file)
 
 
 # Experiment 2: Improved instructions for the AI model
@@ -47,7 +34,7 @@ Create a weekly feedback report in clear English with:
 IMPORTANT RULES:
 
 1. Analyze all 10 reviews exactly once.
-2. Understand reviews written in English, French, and German.
+2. Understand reviews written in English, French, German, and Luxembourgish.
 3. Group complaints with the same meaning across languages.
 4. Do not repeat, invent, or misrepresent customer feedback.
 5. For each complaint category, provide:
@@ -100,6 +87,8 @@ print(prompt)
 # Send the reviews to the local AI model
 print("\nAI is analyzing customer reviews...")
 
+start_time = time.perf_counter()
+
 response = chat(
     model="qwen2.5:3b",
     messages=[
@@ -107,6 +96,11 @@ response = chat(
     ],
     options={"temperature": 0}
 )
+
+end_time = time.perf_counter()
+runtime = end_time - start_time
+
+print(f"AI runtime: {runtime:.2f} seconds")
 
 # Get the actual AI-generated report
 report = response.message.content
@@ -120,6 +114,7 @@ output_path = Path(__file__).parent / "experiment_output_2.txt"
 
 with open(output_path, "w", encoding="utf-8") as file:
     file.write(report)
+    file.write(f"\n\nAI runtime: {runtime:.2f} seconds\n")
 
 # Save the exact prompt used for Experiment 2
 prompt_path = Path(__file__).parent / "experiment_prompt_2.txt"

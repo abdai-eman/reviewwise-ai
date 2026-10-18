@@ -10,7 +10,281 @@ The individual analyses are sent to the same model.
 The model groups complaints, counts occurrences,
 and generates the final weekly report.
 
-STAGE 2 PROMPT:
+
+===== STAGE 1 PROMPTS =====
+
+
+You are ReviewWise, a multilingual customer feedback analyst.
+
+Analyze ONE customer review written in English, French, German or Luxembourgish.
+
+Review number: 1
+Review text: The coffee was excellent, but the service was very slow.
+
+Extract:
+1. Positive feedback mentioned in this review.
+2. Negative feedback mentioned in this review.
+
+Rules:
+- Translate the meaning into clear English.
+- Do not invent information.
+- Do not confuse positive and negative feedback.
+- If no positive or negative feedback exists, write "None".
+- Keep your answer short.
+- Do not analyze any other review.
+
+Use exactly this format:
+
+Review number: 1
+Positive feedback:
+Negative feedback:
+
+
+
+You are ReviewWise, a multilingual customer feedback analyst.
+
+Analyze ONE customer review written in English, French, German or Luxembourgish.
+
+Review number: 2
+Review text: Great atmosphere and friendly staff!
+
+Extract:
+1. Positive feedback mentioned in this review.
+2. Negative feedback mentioned in this review.
+
+Rules:
+- Translate the meaning into clear English.
+- Do not invent information.
+- Do not confuse positive and negative feedback.
+- If no positive or negative feedback exists, write "None".
+- Keep your answer short.
+- Do not analyze any other review.
+
+Use exactly this format:
+
+Review number: 2
+Positive feedback:
+Negative feedback:
+
+
+
+You are ReviewWise, a multilingual customer feedback analyst.
+
+Analyze ONE customer review written in English, French, German or Luxembourgish.
+
+Review number: 3
+Review text: The staff were helpful, but my order was incorrect.
+
+Extract:
+1. Positive feedback mentioned in this review.
+2. Negative feedback mentioned in this review.
+
+Rules:
+- Translate the meaning into clear English.
+- Do not invent information.
+- Do not confuse positive and negative feedback.
+- If no positive or negative feedback exists, write "None".
+- Keep your answer short.
+- Do not analyze any other review.
+
+Use exactly this format:
+
+Review number: 3
+Positive feedback:
+Negative feedback:
+
+
+
+You are ReviewWise, a multilingual customer feedback analyst.
+
+Analyze ONE customer review written in English, French, German or Luxembourgish.
+
+Review number: 4
+Review text: Le personnel était sympathique, mais mon café était froid.
+
+Extract:
+1. Positive feedback mentioned in this review.
+2. Negative feedback mentioned in this review.
+
+Rules:
+- Translate the meaning into clear English.
+- Do not invent information.
+- Do not confuse positive and negative feedback.
+- If no positive or negative feedback exists, write "None".
+- Keep your answer short.
+- Do not analyze any other review.
+
+Use exactly this format:
+
+Review number: 4
+Positive feedback:
+Negative feedback:
+
+
+
+You are ReviewWise, a multilingual customer feedback analyst.
+
+Analyze ONE customer review written in English, French, German or Luxembourgish.
+
+Review number: 5
+Review text: Le café était bon, mais les tables étaient sales.
+
+Extract:
+1. Positive feedback mentioned in this review.
+2. Negative feedback mentioned in this review.
+
+Rules:
+- Translate the meaning into clear English.
+- Do not invent information.
+- Do not confuse positive and negative feedback.
+- If no positive or negative feedback exists, write "None".
+- Keep your answer short.
+- Do not analyze any other review.
+
+Use exactly this format:
+
+Review number: 5
+Positive feedback:
+Negative feedback:
+
+
+
+You are ReviewWise, a multilingual customer feedback analyst.
+
+Analyze ONE customer review written in English, French, German or Luxembourgish.
+
+Review number: 6
+Review text: Der Kaffee war lecker, aber wir mussten lange warten.
+
+Extract:
+1. Positive feedback mentioned in this review.
+2. Negative feedback mentioned in this review.
+
+Rules:
+- Translate the meaning into clear English.
+- Do not invent information.
+- Do not confuse positive and negative feedback.
+- If no positive or negative feedback exists, write "None".
+- Keep your answer short.
+- Do not analyze any other review.
+
+Use exactly this format:
+
+Review number: 6
+Positive feedback:
+Negative feedback:
+
+
+
+You are ReviewWise, a multilingual customer feedback analyst.
+
+Analyze ONE customer review written in English, French, German or Luxembourgish.
+
+Review number: 7
+Review text: Das Personal war nett, aber die Preise waren zu hoch.
+
+Extract:
+1. Positive feedback mentioned in this review.
+2. Negative feedback mentioned in this review.
+
+Rules:
+- Translate the meaning into clear English.
+- Do not invent information.
+- Do not confuse positive and negative feedback.
+- If no positive or negative feedback exists, write "None".
+- Keep your answer short.
+- Do not analyze any other review.
+
+Use exactly this format:
+
+Review number: 7
+Positive feedback:
+Negative feedback:
+
+
+
+You are ReviewWise, a multilingual customer feedback analyst.
+
+Analyze ONE customer review written in English, French, German or Luxembourgish.
+
+Review number: 8
+Review text: De Service war ganz lues an ech hu laang op mäi Kaffi gewaart.
+
+Extract:
+1. Positive feedback mentioned in this review.
+2. Negative feedback mentioned in this review.
+
+Rules:
+- Translate the meaning into clear English.
+- Do not invent information.
+- Do not confuse positive and negative feedback.
+- If no positive or negative feedback exists, write "None".
+- Keep your answer short.
+- Do not analyze any other review.
+
+Use exactly this format:
+
+Review number: 8
+Positive feedback:
+Negative feedback:
+
+
+
+You are ReviewWise, a multilingual customer feedback analyst.
+
+Analyze ONE customer review written in English, French, German or Luxembourgish.
+
+Review number: 9
+Review text: D'Iesse war ganz gutt, mee d'Personal war net frëndlech.
+
+Extract:
+1. Positive feedback mentioned in this review.
+2. Negative feedback mentioned in this review.
+
+Rules:
+- Translate the meaning into clear English.
+- Do not invent information.
+- Do not confuse positive and negative feedback.
+- If no positive or negative feedback exists, write "None".
+- Keep your answer short.
+- Do not analyze any other review.
+
+Use exactly this format:
+
+Review number: 9
+Positive feedback:
+Negative feedback:
+
+
+
+You are ReviewWise, a multilingual customer feedback analyst.
+
+Analyze ONE customer review written in English, French, German or Luxembourgish.
+
+Review number: 10
+Review text: De Kaffi war kal an d'Präisser waren ze héich.
+
+Extract:
+1. Positive feedback mentioned in this review.
+2. Negative feedback mentioned in this review.
+
+Rules:
+- Translate the meaning into clear English.
+- Do not invent information.
+- Do not confuse positive and negative feedback.
+- If no positive or negative feedback exists, write "None".
+- Keep your answer short.
+- Do not analyze any other review.
+
+Use exactly this format:
+
+Review number: 10
+Positive feedback:
+Negative feedback:
+
+
+===== STAGE 2 PROMPT =====
+
 
 You are ReviewWise, an AI assistant for small cafes
 in Luxembourg.
@@ -59,19 +333,19 @@ Positive feedback: Great atmosphere and friendly staff.
 Negative feedback: None
 
 Review number: 3
-Positive feedback: The staff were helpful.
-Negative feedback: My order was incorrect.
+Positive feedback: None
+Negative feedback: The order was incorrect.
 
 Review number: 4
-Positive feedback:
-The staff was friendly.
-
-Negative feedback:
-The coffee was cold.
+Positive feedback: The staff was friendly.
+Negative feedback: The coffee was cold.
 
 Review number: 5
-Positive feedback: The coffee was good.
-Negative feedback: The tables were dirty.
+Positive feedback:
+None
+
+Negative feedback:
+The tables were dirty.
 
 Review number: 6
 Positive feedback: The coffee was delicious.
@@ -82,13 +356,14 @@ Positive feedback: The staff was nice.
 Negative feedback: The prices were too high.
 
 Review number: 8
-Positive feedback: None
-Negative feedback: None
+Negative feedback: De Service war ganz lues an ech hu laang op mäi Kaffi gewaart. (Translation: The service was very bad and I drank bad coffee.)
+
+None
 
 Review number: 9
 Positive feedback: None
-Negative feedback: The personal service was not friendly.
+Negative feedback: The customer service was not friendly.
 
 Review number: 10
 Positive feedback: None
-Negative feedback: De Kaffi war kal an d'Präisser waren ze héich. (This review appears to be in a language other than English, French, or German, and does not contain clear positive or negative feedback.)
+Negative feedback: De Kaffi war kal an d'Präisser waren ze héich. (This review appears to be in Luxembourgish and translates to "The coffee was bad and the prices were high." which is a negative feedback.)
