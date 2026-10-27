@@ -1,4 +1,3 @@
-THIS IS THE MAIN READ.md:&#x20;**&#xA0;ReviewWise**
 
 **\*\*AI-Powered Multilingual Customer Review Analysis for Small Businesses in Luxembourg\*\***
 
