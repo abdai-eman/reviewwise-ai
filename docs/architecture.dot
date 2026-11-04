@@ -6,7 +6,7 @@ digraph ReviewWise {
     label="USER'S COMPUTER — reviews stay inside this boundary";
     color="#3b8060"; style="rounded"; fontname="Arial"; fontsize=16;
     browser [label="Browser / Streamlit UI\nPaste text or upload CSV\napp.py"];
-    python [label="Python 3.12 / Streamlit 1.66.1\nreviewwise/pipeline.py\nInput limits + Python-assigned review IDs"];
+    python [label="Python 3.11-3.15 / Streamlit 1.66.1\nreviewwise/pipeline.py\nInput limits + Python-assigned review IDs"];
     prompt [label="reviewwise/prompts.py: extraction instructions\nreviewwise/config.py: model, categories, limits\nJSON schema: Pydantic 2.14.2", fillcolor="#fff5dd"];
     ollama [label="Local Ollama API (127.0.0.1:11434)\nqwen2.5:3b / Python client 0.6.3\nRuntime 0.40.14 startup checked; inference pending"];
     validate [label="Python validates JSON + categories + verbatim quotes\nOne retry; unresolved failures stop the batch\nInterpretation itself can still be wrong"];

@@ -19,7 +19,8 @@ semester brief was read during M3 preparation. M2 evidence is unchanged.
 | Hash-verified dependency install and `pip check` | Passed | Packages install consistently on this Linux runtime. |
 | Fresh source-only setup in a path containing spaces | Packages passed; full setup blocked at model download | New `.venv` created and installed consistently; this is not a fresh Windows/laptop test. |
 | Windows x64 / Python 3.12 pip dry run | Passed | Required wheel artifacts were available with matching hashes. This does not execute Windows scripts or install on Windows. |
-| `python -m unittest discover -s tests -v` | 37 passed | Offline input, extraction/retry, counting, UI and cold/warm launcher tests. Windows installer calls are mocked; this does not prove native Windows installation or real AI. |
+| `python -m unittest discover -s tests -v` | 39 passed on each Python 3.11-3.15 | Offline input, extraction/retry, counting, UI and launcher tests. Windows installer calls are mocked; this does not prove native Windows installation or real AI. |
+| Windows package dry runs on Python 3.11/3.13/3.14/3.15 | Passed | Hash-locked binary packages resolve for Windows on every tested interpreter. Existing 3.12 wheel validation also passed. |
 | Live Streamlit HTTP / Chromium browser check | Passed | Page loads; pasted input, valid/invalid CSV and real missing-model error work. No report appears on failure; no browser JavaScript errors. External browser requests were blocked during this test. |
 | `bash -n setup.sh start.sh` | Passed | Shell syntax only. |
 | Native Ollama startup | Passed | Service API responds; no model installed. |
@@ -45,9 +46,13 @@ The student prepares and validates the package. The professor does not run a
 packaging command, diagnostics or a script pasted into a terminal.
 
 `START_REVIEWWISE.bat` is the single entry point for first and later launches.
-It changes to its own project directory, detects 64-bit Python 3.12 (including
-the default per-user path after installation), and uses WinGet to install it
-if missing. The Python launcher installs Ollama if needed on Windows, creates
+It changes to its own project directory and detects existing 64-bit Python
+3.11-3.15 through the project environment, PATH, standard installation folders,
+the Python launcher and installed Microsoft Store Python packages. It asks before
+installing Python if no compatible interpreter is found. Python install manager
+automatic downloads are disabled during detection using its documented
+`PYTHON_MANAGER_AUTOMATIC_INSTALL=false` setting. The manager installs Ollama if
+needed on Windows, creates
 or refreshes `.venv` only when needed, pulls a missing model, starts/reuses
 Ollama, chooses an available loopback port and opens Streamlit.
 
@@ -64,6 +69,15 @@ failure, missing-model pull and verification, ordering startup after prerequisit
 and selecting an available port. The native `.bat`/WinGet path still requires
 execution on a real Windows laptop. The Linux cloud model download remains
 blocked; no complete first-launch or real-inference success is claimed.
+
+The original Python 3.12-only restriction was unnecessarily narrow. The lock
+now selects NumPy 2.4.6 on Python 3.11 and 2.5.4 on newer Python; all artifact
+hashes remain checked. Dependency installation and all 39 offline tests passed
+with CPython 3.11.17, 3.12.14, 3.13.16, 3.14.8 and 3.15.0. Three initial parallel
+UI test runs hit the runner's three-second timeout during cold imports on the
+shared CPU quota; sequential reruns passed with assertions/timeouts unchanged.
+This matrix verifies Python compatibility on the development host, not native
+Windows installation or AI accuracy.
 
 The cloud draft adds `registry.ollama.ai` to the existing network policy.
 Saving does not apply it. Review/save and publish through environment settings

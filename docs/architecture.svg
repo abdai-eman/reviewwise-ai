@@ -27,7 +27,7 @@
 <g id="node2" class="node">
 <title>python</title>
 <path fill="#edf4ff" stroke="#5073a3" d="M533,-577.88C533,-577.88 311,-577.88 311,-577.88 305,-577.88 299,-571.88 299,-565.88 299,-565.88 299,-532.88 299,-532.88 299,-526.88 305,-520.88 311,-520.88 311,-520.88 533,-520.88 533,-520.88 539,-520.88 545,-526.88 545,-532.88 545,-532.88 545,-565.88 545,-565.88 545,-571.88 539,-577.88 533,-577.88"/>
-<text text-anchor="middle" x="422" y="-559.27" font-family="Arial" font-size="12.00">Python 3.12 / Streamlit 1.66.1</text>
+<text text-anchor="middle" x="422" y="-559.27" font-family="Arial" font-size="12.00">Python 3.11&#45;3.15 / Streamlit 1.66.1</text>
 <text text-anchor="middle" x="422" y="-546.27" font-family="Arial" font-size="12.00">reviewwise/pipeline.py</text>
 <text text-anchor="middle" x="422" y="-533.27" font-family="Arial" font-size="12.00">Input limits + Python&#45;assigned review IDs</text>
 </g>

@@ -1,5 +1,6 @@
 @echo off
 setlocal EnableExtensions DisableDelayedExpansion
+set "PYTHON_MANAGER_AUTOMATIC_INSTALL=false"
 title ReviewWise - local startup
 pushd "%~dp0"
 if errorlevel 1 goto folder_error
@@ -7,7 +8,7 @@ if errorlevel 1 goto folder_error
 if not exist "scripts\manage.py" goto extract_first
 echo.
 echo ReviewWise - local review analysis
-echo First launch prepares Python, Ollama, packages and the model.
+echo First launch checks your existing Python and Ollama, then prepares the app.
 echo Keep this window open. The application will open in your browser.
 echo.
 
@@ -17,6 +18,9 @@ call :find_python
 if defined REVIEWWISE_PYTHON goto launch
 
 where winget >nul 2>nul
+if errorlevel 1 goto python_help
+echo No compatible 64-bit Python 3.11-3.15 was found.
+powershell -NoProfile -Command "Add-Type -AssemblyName System.Windows.Forms; $answer = [System.Windows.Forms.MessageBox]::Show('ReviewWise could not find an installed 64-bit Python 3.11-3.15. Would you like to install Python 3.12 for your Windows account?', 'ReviewWise - Python not found', 'YesNo', 'Question', 'Button2'); if ($answer -eq 'Yes') { exit 0 } else { exit 1 }"
 if errorlevel 1 goto python_help
 echo Installing 64-bit Python 3.12 for your Windows account...
 winget install --id Python.Python.3.12 --exact --source winget --scope user --architecture x64 --accept-package-agreements --accept-source-agreements --disable-interactivity
@@ -38,17 +42,21 @@ exit /b %REVIEWWISE_RESULT%
 
 :find_python
 set "REVIEWWISE_PYTHON="
-for %%P in ("%LOCALAPPDATA%\Programs\Python\Python312\python.exe" "%ProgramFiles%\Python312\python.exe" ".venv\Scripts\python.exe") do call :accept_python "%%~P"
-if defined REVIEWWISE_PYTHON exit /b 0
-for /f "delims=" %%P in ('py -3.12 -c "import sys; print(sys.executable)" 2^>nul') do call :accept_python "%%P"
+call :accept_python ".venv\Scripts\python.exe"
 if defined REVIEWWISE_PYTHON exit /b 0
 for /f "delims=" %%P in ('where python.exe 2^>nul ^| findstr /i /v "WindowsApps"') do call :accept_python "%%P"
+if defined REVIEWWISE_PYTHON exit /b 0
+for /d %%D in ("%LOCALAPPDATA%\Programs\Python\Python3*" "%ProgramFiles%\Python3*") do call :accept_python "%%~fD\python.exe"
+if defined REVIEWWISE_PYTHON exit /b 0
+for /f "delims=" %%P in ('py -c "import sys; print(sys.executable)" 2^>nul') do call :accept_python "%%P"
+if defined REVIEWWISE_PYTHON exit /b 0
+for /f "delims=" %%P in ('powershell -NoProfile -Command "Get-AppxPackage -Name PythonSoftwareFoundation.Python.3* | ForEach-Object { Join-Path $_.InstallLocation 'python.exe' }" 2^>nul') do call :accept_python "%%P"
 exit /b 0
 
 :accept_python
 if defined REVIEWWISE_PYTHON exit /b 0
 if not exist "%~1" exit /b 0
-"%~1" -c "import struct,sys; sys.exit(0 if sys.version_info[:2] == (3,12) and struct.calcsize('P') == 8 else 1)" >nul 2>nul
+"%~1" -c "import struct,sys; sys.exit(0 if (3,11) <= sys.version_info[:2] < (3,16) and struct.calcsize('P') == 8 else 1)" >nul 2>nul
 if not errorlevel 1 set "REVIEWWISE_PYTHON=%~1"
 exit /b 0
 
@@ -59,8 +67,9 @@ goto python_help
 
 :python_help
 echo.
-echo Automatic installation needs Windows App Installer / WinGet.
-echo Install 64-bit Python 3.12 from https://www.python.org/downloads/windows/
+echo A compatible installed 64-bit Python 3.11-3.15 could not be detected.
+echo Automatic installation needs Windows App Installer / WinGet and your approval.
+echo Supported Python downloads: https://www.python.org/downloads/windows/
 echo Include pip and the Python launcher. Also install Ollama from https://ollama.com/download/windows
 echo Then double-click START_REVIEWWISE.bat again.
 pause

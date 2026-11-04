@@ -8,8 +8,18 @@ from scripts import manage
 
 class SetupTests(unittest.TestCase):
     def test_wrong_python_has_a_specific_remedy(self):
-        with patch.object(manage.sys, "version_info", (3, 11, 0)):
-            with self.assertRaisesRegex(manage.SetupError, "64-bit Python 3.12"):
+        with patch.object(manage.sys, "version_info", (3, 10, 0)):
+            with self.assertRaisesRegex(manage.SetupError, "64-bit Python 3.11-3.15"):
+                manage.check_python()
+
+    def test_supported_existing_python_versions_are_accepted(self):
+        for minor in range(11, 16):
+            with self.subTest(minor=minor), patch.object(manage.sys, "version_info", (3, minor, 0)), patch.object(manage.struct, "calcsize", return_value=8):
+                manage.check_python()
+
+    def test_32bit_python_is_rejected(self):
+        with patch.object(manage.struct, "calcsize", return_value=4):
+            with self.assertRaisesRegex(manage.SetupError, "64-bit"):
                 manage.check_python()
 
     def test_missing_ollama_has_installation_instructions(self):

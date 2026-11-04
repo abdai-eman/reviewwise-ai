@@ -34,9 +34,11 @@ installations. Windows execution still needs a real laptop test; see
 3. Double-click **`START_REVIEWWISE.bat`**. Wait for the app to open in your browser.
    Keep the launcher window open. Paste reviews or upload a CSV, then click **Analyze reviews**.
 
-**First launch:** the launcher finds or installs **64-bit Python 3.12** and
-**Ollama** using the WinGet community source and its installer checksum checks.
-It installs prerequisites for the current Windows account, creates `.venv`,
+**First launch:** the launcher reuses an installed **64-bit Python 3.11-3.15**
+and existing **Ollama**. If no compatible Python can be found, it asks before
+installing Python 3.12; you can decline. Python launcher auto-downloads are
+disabled during detection. Missing software uses the WinGet community source
+and its installer checksum checks. The launcher creates `.venv`,
 installs the hash-locked Python packages, starts Ollama and downloads `qwen2.5:3b`
 if missing. Package/source agreements are accepted by this automatic setup.
 Internet and permission to install software are needed. Installation can take
@@ -56,11 +58,13 @@ option is still available for the source repository, but that ZIP adds an inner
 `reviewwise-ai-m3-mvp` folder; the Windows package above avoids that extra level.
 
 **Fallback when WinGet is unavailable:** first install
-[64-bit Python 3.12](https://www.python.org/downloads/windows/) with pip and the
+[64-bit Python 3.11-3.15](https://www.python.org/downloads/windows/) with pip and the
 Python launcher, then [Ollama](https://ollama.com/download/windows), then follow
 the three steps above. This path totals **five steps**, including both manual
 prerequisite installations. An organization may need to allow software installs.
-The app currently requires Python 3.12; other versions are not yet validated.
+Compatible existing Python installations are reused; another version is not
+required just because Python 3.12 is absent. Automated compatibility checks
+cover Python 3.11-3.15; a native Windows first-run test is still needed.
 The older `start.bat` delegates to the same launcher; `setup.bat` remains available
 for preparation without opening the app.
 
@@ -73,7 +77,7 @@ no dedicated GPU is required by our code. Hardware performance and offline
 operation after setup still need laptop validation. See
 [Ollama's hardware guidance](https://docs.ollama.com/gpu).
 
-**macOS/Linux (manual prerequisites):** install Python 3.12 with pip/venv,
+**macOS/Linux (manual prerequisites):** use Python 3.11-3.15 with pip/venv,
 install Ollama, download/extract the project, run `bash setup.sh`, then run
 `bash start.sh`. Linux Python 3.12.14 and native Ollama 0.40.14 were used for
 the recorded checks. macOS and other distributions are not yet verified targets.

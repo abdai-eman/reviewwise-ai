@@ -39,10 +39,10 @@ def run(command, error):
 
 
 def check_python():
-    if sys.version_info[:2] != (3, 12) or struct.calcsize("P") != 8:
+    if not (3, 11) <= sys.version_info[:2] < (3, 16) or struct.calcsize("P") != 8:
         raise SetupError(
-            "ReviewWise currently requires 64-bit Python 3.12. Install it from python.org "
-            "and rerun setup. Other Python versions have not been validated."
+            "ReviewWise needs 64-bit Python 3.11-3.15. Restart START_REVIEWWISE.bat "
+            "to use a compatible Python already installed on your computer."
         )
 
 
@@ -152,8 +152,8 @@ def ensure_dependencies(force=False):
         except (OSError, subprocess.CalledProcessError) as exc:
             raise SetupError("Could not create .venv. Check Python's venv/pip support and free disk space.") from exc
     run(
-        [str(PYTHON), "-c", "import sys; assert sys.version_info[:2] == (3, 12)"],
-        "The existing .venv uses another Python version. Rename it, then rerun setup with Python 3.12.",
+        [str(PYTHON), "-c", "import sys,struct; assert (3,11) <= sys.version_info[:2] < (3,16) and struct.calcsize('P') == 8"],
+        "The existing .venv uses an unsupported Python. Rename it, then rerun the launcher.",
     )
     print("Installing checksum-verified, pinned Python packages...", flush=True)
     run(

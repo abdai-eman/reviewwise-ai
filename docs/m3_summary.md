@@ -20,13 +20,13 @@ No database, cloud AI, API key or Docker is required. See `docs/architecture.svg
 
 **Installation.** On Windows 11 with App Installer/WinGet: download the M3 ZIP,
 extract it, double-click `START_REVIEWWISE.bat`. First launch installs missing
-Python 3.12/Ollama for the current user, creates `.venv`, installs hash-checked
+Python/Ollama only when missing, reuses Python 3.11-3.15, creates `.venv`, installs hash-checked
 packages, downloads the model and opens the app. Later starts use the same file.
-Without WinGet, manually installing Python/Ollama adds two prerequisites: five
+It asks before installing another Python. Without WinGet, installing missing prerequisites adds up to two steps: five
 steps total. The model is about 1.9 GB (unverified estimate); 16 GB RAM is a
 planning recommendation, not a measured minimum.
 
-**Evidence and status.** 37 offline logic/UI/launcher tests pass on Linux. Package install
+**Evidence and status.** 39 offline logic/UI/launcher tests pass on Python 3.11-3.15 in the development environment. Package install
 and native Ollama 0.40.14 startup work. Cloud policy blocks the model registry,
 so no real M3 inference or accuracy improvement is claimed. M2 evidence is
 unchanged. Windows setup, a real-input run, another person's laptop test,

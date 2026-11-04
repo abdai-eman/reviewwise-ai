@@ -161,3 +161,10 @@ GitHub's extra source-folder level after extraction. The professor-facing path
 uses download, Extract All and double-click; terminal diagnostics are not part
 of that handoff. Windows execution still needs the independent laptop check.
 
+Removed the unnecessarily strict Python 3.12-only detection. Existing 64-bit
+Python 3.11-3.15 can be reused; a new Python installation requires explicit
+confirmation if detection fails. The dependency lock retains checksums and
+selects a compatible NumPy version on 3.11. All 39 offline tests pass across the
+five supported Python versions on the development host. Windows-native and
+real-model verification remain outstanding.
+
