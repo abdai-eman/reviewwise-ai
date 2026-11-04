@@ -1,0 +1,50 @@
+/* These classes belong to our static presentation, not Streamlit's internal DOM. */
+.rw-header {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem; padding-bottom: 1rem; margin-bottom: 1rem;
+  border-bottom: 1px solid #dedcd1;
+}
+.rw-brand { display: flex; align-items: center; gap: .7rem; }
+.rw-brand svg { flex-shrink: 0; }
+.rw-brand-name { font-size: 1.45rem; font-weight: 700; letter-spacing: -.045em; color: #245747; }
+.rw-status {
+  font-size: .78rem; font-weight: 600; color: #245747; white-space: nowrap;
+  padding: .4rem .7rem; border: 1px solid #c8d7cc; border-radius: 2rem;
+  background: #eef3eb;
+}
+.rw-status::before { content: ""; display: inline-block; width: .4rem; height: .4rem;
+  margin-right: .4rem; border-radius: 50%; background: currentColor; vertical-align: middle; }
+.rw-kicker { color: #985537; font-size: .73rem; font-weight: 700;
+  letter-spacing: .12em; text-transform: uppercase; margin-bottom: .7rem; }
+.rw-intro h1 { font-family: Georgia, serif; font-weight: 500; color: #243d30;
+  font-size: clamp(2rem, 3vw, 2.75rem); line-height: 1.13; letter-spacing: -.035em;
+  max-width: 32ch; margin: 0 0 .7rem; padding: 0; }
+.rw-intro p { max-width: 80ch; color: #526154; line-height: 1.6; margin-bottom: .6rem; }
+.rw-languages { display: flex; flex-wrap: wrap; gap: .45rem; margin: .6rem 0 .3rem; }
+.rw-languages span { border: 1px solid #dedcd1; background: #fbfaf6;
+  border-radius: 2rem; padding: .23rem .65rem; color: #4b5c4d; font-size: .75rem; }
+.rw-guide { border-bottom: 1px solid #e2dfd4; padding: .2rem 0 1rem; margin-bottom: 1rem; }
+.rw-guide:last-child { border-bottom: 0; padding-bottom: 0; margin-bottom: 0; }
+.rw-guide-number { color: #9b593b; font-size: .72rem; font-weight: 700; letter-spacing: .08em; }
+.rw-guide h3 { color: #294637; font-family: Georgia, serif; font-size: 1.15rem;
+  font-weight: 500; margin: .3rem 0; padding: 0; }
+.rw-guide p { color: #596658; font-size: .88rem; line-height: 1.55; margin: 0; }
+.rw-section-label { font-size: .72rem; letter-spacing: .1em; font-weight: 700;
+  text-transform: uppercase; color: #985537; margin: .2rem 0; }
+.rw-action-number { color: #985537; font-size: .78rem; font-weight: 700; margin-bottom: .45rem; }
+.rw-quote { margin: 0; font-family: Arial, sans-serif; font-size: .95rem;
+  color: #26352d; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+.rw-footer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #dedcd1;
+  color: #626d61; font-size: .78rem; line-height: 1.6; }
+/* Container keys are Streamlit's supported, explicit CSS hooks. */
+.st-key-input_workspace { background: #fff; padding: 1.25rem; border-radius: .75rem; }
+.st-key-companion { background: #f0f1e8; padding: 1.25rem; border-radius: .75rem; }
+.st-key-primary_action button { min-height: 3rem; font-weight: 600; }
+.st-key-primary_action button:focus-visible { outline: 3px solid #a85d3d; outline-offset: 3px; }
+@media (max-width: 640px) {
+  .rw-header { margin-bottom: 1.1rem; gap: .5rem; flex-wrap: wrap; }
+  .rw-brand-name { font-size: 1.2rem; }
+  .rw-status { font-size: .7rem; padding: .32rem .5rem; }
+  .rw-intro h1 { font-size: 2rem; max-width: none; }
+  .st-key-input_workspace, .st-key-companion { padding: .8rem; }
+}

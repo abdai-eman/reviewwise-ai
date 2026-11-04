@@ -1,125 +1,302 @@
-"""Local ReviewWise interface. Start with start.bat or bash start.sh."""
+"""ReviewWise presentation. Analysis, validation and counting live in reviewwise/."""
 
+import html
 import json
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import streamlit as st
 
-from reviewwise.config import CATEGORIES, MAX_REVIEWS, MODEL
+from reviewwise.config import CATEGORIES, MAX_REVIEW_LENGTH, MAX_REVIEWS, MODEL, OLLAMA_URL
 from reviewwise.pipeline import (
     ReviewWiseError, analyze_reviews, complaint_rows, reviews_from_csv, reviews_from_text,
 )
 from reviewwise.report import render_report, suggested_actions
 
 
-st.set_page_config(page_title="ReviewWise", page_icon="☕", layout="centered")
-st.title("ReviewWise")
-st.write("Understand customer feedback and choose what to improve next.")
-st.caption(
-    f"Local AI: Ollama · {MODEL} · English, French, German and Luxembourgish · "
-    f"Up to {MAX_REVIEWS} reviews per batch"
-)
-st.info("Remove names and personal details before analysis. Reviews are sent only to Ollama on this computer.")
+ROOT = Path(__file__).parent
+HOST = urlsplit(OLLAMA_URL).hostname
+IS_LOCAL = HOST in {"127.0.0.1", "localhost", "::1"}
 
-mode = st.radio("Review input", ["Paste reviews", "Upload CSV"], horizontal=True)
-if "review_text" not in st.session_state:
-    st.session_state.review_text = ""
 
-if mode == "Paste reviews":
-    if st.button("Load fictional M2 example"):
-        example = Path(__file__).parent / "experiments" / "reviews.json"
-        st.session_state.review_text = "\n".join(json.loads(example.read_text(encoding="utf-8")))
-        st.session_state.pop("result", None)
-    text = st.text_area(
-        "One review per line", key="review_text", height=200,
-        placeholder="The coffee was excellent, but we waited too long.\nLe personnel était sympathique.",
-        max_chars=25_000,
-    )
-    raw_input = (mode, text)
-    try:
-        reviews = reviews_from_text(text)
-        input_error = None
-    except ReviewWiseError as exc:
-        reviews, input_error = [], str(exc)
-else:
-    upload = st.file_uploader("UTF-8 CSV with a 'review' column", type=["csv"], max_upload_size=1)
-    data = upload.getvalue() if upload else b""
-    raw_input = (mode, data)
-    try:
-        reviews = reviews_from_csv(data) if upload else []
-        input_error = None if upload else "Choose a CSV to begin."
-    except ReviewWiseError as exc:
-        reviews, input_error = [], str(exc)
+def save_text():
+    st.session_state.saved_review_text = st.session_state._review_text
 
-# Editing input invalidates old results, including after a failed analysis.
-if st.session_state.get("result_input") != raw_input:
+
+def save_csv():
+    upload = st.session_state.get("_csv_upload")
+    st.session_state.saved_csv = upload.getvalue() if upload else b""
+    st.session_state.saved_csv_name = upload.name if upload else ""
+
+
+def load_sample():
+    reviews = json.loads((ROOT / "experiments/reviews.json").read_text(encoding="utf-8"))
+    st.session_state.saved_review_text = "\n".join(reviews)
+    st.session_state._review_text = st.session_state.saved_review_text
+    st.session_state.input_mode = "Paste reviews"
     st.session_state.pop("result", None)
+    st.session_state.pop("last_result", None)
 
-if reviews:
-    with st.expander(f"Preview {len(reviews)} review(s)", expanded=False):
-        for review in reviews:
-            st.text(f"{review.number}. {review.text}")
-    if len({review.text for review in reviews}) < len(reviews):
-        st.warning("Identical reviews are present. Each input row will count as a separate review.")
-elif input_error:
-    st.caption(input_error)
 
-if st.button("Analyze reviews", type="primary", disabled=not reviews):
-    st.session_state.pop("result", None)
-    progress = st.progress(0, text="Checking Ollama and the model…")
-    try:
-        with st.spinner("Analyzing locally. CPU inference can take several minutes."):
-            result = analyze_reviews(
-                reviews,
-                progress=lambda done, total: progress.progress(
-                    done / total, text=f"Analyzed {done} of {total} reviews"
-                ),
+def clear_workspace():
+    st.session_state.clear()
+
+
+def show_review_text(text):
+    # Guest text is escaped, never treated as markup or interactive HTML.
+    st.markdown(f'<p class="rw-quote">{html.escape(text)}</p>', unsafe_allow_html=True)
+
+
+def review_count_label(count):
+    return f"{count} review{'s' if count != 1 else ''}"
+
+
+def explain_error(error):
+    message = str(error).lower()
+    if "model is missing" in message:
+        return "The analysis model isn’t ready yet.", "Reopen the ReviewWise launcher with internet access to finish setup, then try again."
+    if "unavailable" in message:
+        return "We couldn’t reach your local AI.", "Open Ollama on this computer, then try again. Your reviews are still here."
+    if "could not analyze" in message:
+        return "The local AI couldn’t analyse this review.", "Check that Ollama is open. Close applications that use a lot of memory, then try the review on its own."
+    if "timed out" in message:
+        return "This review took longer than expected.", "Try a smaller batch or a shorter review, and close applications that use a lot of memory."
+    return "We couldn’t finish this batch.", "Your input is saved. Try the review mentioned in the details on its own, or use a smaller batch."
+
+
+st.set_page_config(page_title="ReviewWise · Guest feedback, clearer", page_icon="☕", layout="wide")
+css = (ROOT / "assets/interface.css").read_text(encoding="utf-8")
+st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
+
+status = "Local processing" if IS_LOCAL else "Configured model service"
+st.markdown(f"""
+<div class="rw-header">
+  <div class="rw-brand">
+    <svg width="36" height="36" viewBox="0 0 36 36" aria-hidden="true">
+      <rect width="36" height="36" rx="11" fill="#245747"/>
+      <path d="M10 11h16v11H16l-5 4v-4h-1z" fill="none" stroke="#f7f5ef" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="m14 16 3 3 5-5" fill="none" stroke="#e3c5ac" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span class="rw-brand-name">ReviewWise</span>
+  </div>
+  <span class="rw-status">{html.escape(status)}</span>
+</div>
+<div class="rw-intro">
+  <div class="rw-kicker">A clearer view of your guest feedback</div>
+  <h1>Your customers have insights. Find your next improvement.</h1>
+  <p>Bring your reviews together to see what guests love, what keeps coming up, and where to focus next.</p>
+</div>
+<div class="rw-languages"><span>English</span><span>French</span><span>German</span><span>Luxembourgish</span></div>
+""", unsafe_allow_html=True)
+st.caption("Interpretations can vary by language, especially Luxembourgish. The original reviews stay available to check.")
+
+for key, default in [("saved_review_text", ""), ("saved_csv", b""), ("saved_csv_name", "")]:
+    st.session_state.setdefault(key, default)
+
+workspace, companion = st.columns([2.05, 1], gap="large")
+with workspace:
+    with st.container(border=True, key="input_workspace"):
+        st.subheader("What are your guests saying?")
+        if IS_LOCAL:
+            st.caption("Before you begin, remove names and personal details. Reviews are analysed on this computer.")
+        else:
+            st.caption(f"Before you begin, remove names and personal details. Reviews are sent to {HOST or 'an unconfirmed location'}; check the details before using personal information.")
+
+        mode = st.radio("Review input", ["Paste reviews", "Upload CSV"], key="input_mode", horizontal=True, label_visibility="collapsed")
+        if mode == "Paste reviews":
+            if "_review_text" not in st.session_state:
+                st.session_state._review_text = st.session_state.saved_review_text
+            text = st.text_area(
+                "One review per line", key="_review_text", on_change=save_text, height=150,
+                placeholder="The staff were friendly, but the coffee was cold.\nLe service était agréable, mais nous avons attendu longtemps.",
+                max_chars=25_000,
             )
-        st.session_state.result = result
-        st.session_state.result_input = raw_input
-    except ReviewWiseError as exc:
-        st.error(str(exc))
-    finally:
-        progress.empty()
+            st.caption(f"Up to {MAX_REVIEWS} reviews · {MAX_REVIEW_LENGTH:,} characters per review.")
+            raw_input = (mode, text)
+            try:
+                reviews, input_error = reviews_from_text(text), None
+            except ReviewWiseError as exc:
+                reviews, input_error = [], str(exc)
+        else:
+            st.file_uploader(
+                "Choose a CSV file", type=["csv"], key="_csv_upload", on_change=save_csv,
+                max_upload_size=1, help="Use UTF-8 and a column named review. Other columns are not sent for analysis.",
+            )
+            st.caption(f"A column named ‘review’ is required · UTF-8 · Under 1 MB · Up to {MAX_REVIEWS} reviews.")
+            if st.session_state.saved_csv_name:
+                st.caption(f"Loaded: {st.session_state.saved_csv_name}")
+            data = st.session_state.saved_csv
+            raw_input = (mode, data)
+            try:
+                reviews = reviews_from_csv(data) if data else []
+                input_error = None if data else "Choose a CSV file to begin."
+            except ReviewWiseError as exc:
+                reviews, input_error = [], str(exc)
+
+        # Keep drafts across input-mode changes; show a report only for its matching input.
+        if st.session_state.get("result_input") == raw_input and "last_result" in st.session_state:
+            st.session_state.result = st.session_state.last_result
+        else:
+            st.session_state.pop("result", None)
+
+        if reviews:
+            st.caption(f"{review_count_label(len(reviews))} ready to analyse.")
+            if len({review.text for review in reviews}) < len(reviews):
+                st.warning("Some reviews are identical. Each input row will count as a separate review.")
+        elif (mode == "Paste reviews" and text.strip()) or (mode == "Upload CSV" and data):
+            st.error(input_error)
+        else:
+            st.caption("Add a review or try the fictional sample to enable analysis." if mode == "Paste reviews" else "Upload a CSV or try the fictional sample to enable analysis.")
+
+        with st.container(key="primary_action"):
+            start_analysis = st.button("Find my next improvements", type="primary", disabled=not reviews, width="stretch")
+
+        if reviews:
+            with st.expander(f"Preview {review_count_label(len(reviews))}"):
+                for review in reviews:
+                    show_review_text(f"{review.number}. {review.text}")
+
+        st.button("Try sample reviews", on_click=load_sample)
+        st.caption("Ten fictional café reviews, provided for demonstration.")
+
+        if start_analysis:
+            st.session_state.pop("result", None)
+            st.session_state.pop("last_result", None)
+            finished = {"count": 0}
+            progress = st.progress(0, text=f"0 of {review_count_label(len(reviews))} completed")
+
+            def update_progress(done, total):
+                finished["count"] = done
+                progress.progress(done / total, text=f"{done} of {review_count_label(total)} completed")
+
+            try:
+                with st.spinner("Looking for patterns in your reviews…"):
+                    result = analyze_reviews(reviews, progress=update_progress)
+                st.session_state.result = result
+                st.session_state.last_result = result
+                st.session_state.result_input = raw_input
+            except ReviewWiseError as exc:
+                title, guidance = explain_error(exc)
+                st.error(title)
+                st.write(guidance)
+                st.caption(f"{finished['count']} of {review_count_label(len(reviews))} completed before the batch stopped. No complete report was created.")
+                with st.expander("Technical details"):
+                    st.text(str(exc))
+            finally:
+                progress.empty()
+
+with companion:
+    with st.container(border=True, key="companion"):
+        st.markdown('<div class="rw-section-label">A useful next step, in three parts</div>', unsafe_allow_html=True)
+        st.markdown("""
+<div class="rw-guide"><div class="rw-guide-number">01</div><h3>See what guests appreciate.</h3><p>Keep the positive feedback in view, alongside the things that need attention.</p></div>
+<div class="rw-guide"><div class="rw-guide-number">02</div><h3>Spot recurring complaints.</h3><p>See how often an issue appears and which reviews support it.</p></div>
+<div class="rw-guide"><div class="rw-guide-number">03</div><h3>Choose practical next steps.</h3><p>Turn supported findings into a few concrete actions for your business.</p></div>
+""", unsafe_allow_html=True)
+    with st.expander("Processing details"):
+        st.write(f"Model: {MODEL}")
+        st.write(f"Model host: {HOST or 'not confirmed'}")
+        st.caption("AI extracts feedback. Python validates quotations and counts reviews. Suggestions use category-based action templates.")
+        st.caption("No database or automatic report files. Your inputs stay in this session; download a report only if you want to keep it.")
+    if st.session_state.saved_review_text or st.session_state.saved_csv:
+        st.button("Start over", on_click=clear_workspace, width="stretch")
 
 if "result" in st.session_state:
     result = st.session_state.result
-    st.subheader("Feedback report")
-    st.caption(f"{len(result.analyses)} reviews analyzed in {result.elapsed_seconds:.1f} seconds")
-    st.warning("AI can misinterpret reviews. Counts reflect its extracted labels; inspect the supporting evidence.")
     rows = complaint_rows(result.analyses)
-    if rows:
-        st.dataframe([{k: v for k, v in row.items() if k != "category"} for row in rows], hide_index=True)
-    else:
-        st.write("No complaints were extracted. Check the original reviews for missed feedback.")
-
-    st.subheader("Practical actions")
     actions = suggested_actions(result.analyses)
-    for number, action in enumerate(actions, 1):
-        st.write(f"{number}. {action}")
-    if len(actions) < 3:
-        st.caption("Fewer than three actions are supported. We do not invent feedback to fill the list.")
+    st.divider()
+    st.markdown('<div class="rw-section-label">From feedback to focus</div>', unsafe_allow_html=True)
+    st.subheader("Your feedback report")
+    st.caption(f"{review_count_label(len(result.analyses))} successfully analysed · {result.elapsed_seconds:.1f} seconds")
+    metrics = st.columns(3)
+    for column, label, value in zip(metrics, ["Reviews analysed", "Complaint groups", "Suggested actions"], [len(result.analyses), len(rows), len(actions)]):
+        column.metric(label, value, border=True)
+    st.caption("AI interpretations can be mistaken. Check the original evidence before making a decision; counts reflect the extracted labels.")
 
-    st.subheader("Positive feedback and complaint evidence")
-    for analysis in result.analyses:
-        with st.expander(f"Review {analysis.review.number}"):
-            st.text(analysis.review.text)
-            st.write("Positive feedback")
-            if not analysis.extraction.positives:
-                st.caption("None extracted.")
-            for quote in analysis.extraction.positives:
-                st.text(quote)
-            st.write("Complaints")
-            if not analysis.extraction.complaints:
-                st.caption("None extracted.")
-            for item in analysis.extraction.complaints:
-                st.text(f"{CATEGORIES[item.category]}: {item.quote}")
-    st.download_button(
-        "Download report (.txt)", render_report(result),
-        file_name="reviewwise-report.txt", mime="text/plain",
-    )
-    if st.button("Clear reviews and results"):
-        st.session_state.clear()
-        st.rerun()
+    overview, evidence = st.tabs(["Overview", "Review evidence"])
+    with overview:
+        issues, praise = st.columns([1.35, 1], gap="large")
+        with issues:
+            st.markdown("### What needs attention")
+            if rows:
+                st.vega_lite_chart(
+                    spec={
+                        "data": {"values": [{"Complaint": row["Complaint"], "Reviews": row["Reviews"]} for row in rows]},
+                        "encoding": {
+                            "y": {"field": "Complaint", "type": "nominal", "sort": None,
+                                  "axis": {"title": None, "labelLimit": 130}},
+                            "x": {"field": "Reviews", "type": "quantitative",
+                                  "axis": {"title": "Number of reviews", "tickMinStep": 1}},
+                        },
+                        "layer": [
+                            {"mark": {"type": "bar", "color": "#245747", "cornerRadiusEnd": 3}},
+                            {"mark": {"type": "text", "align": "left", "dx": 7, "color": "#26352d", "fontSize": 13},
+                             "encoding": {"text": {"field": "Reviews", "type": "quantitative"}}},
+                        ],
+                        "padding": {"right": 24},
+                        "config": {
+                            "background": "#f7f5ef", "view": {"stroke": None},
+                            "axis": {"labelColor": "#4b5c4d", "titleColor": "#4b5c4d",
+                                     "labelFontSize": 13, "titleFontSize": 13, "titleFontWeight": "normal",
+                                     "gridColor": "#e2dfd4", "domain": False, "ticks": False,
+                                     "labelPadding": 10, "titlePadding": 15},
+                        },
+                    },
+                    theme=None, height=max(180, len(rows) * 42), width="stretch",
+                    alt="Number of reviews in each extracted complaint group",
+                )
+                with st.expander("View exact counts and supporting reviews"):
+                    st.dataframe([{k: v for k, v in row.items() if k != "category"} for row in rows], hide_index=True)
+                if any(row["category"] == "other" for row in rows):
+                    st.caption("‘Other complaints’ may concern unrelated topics. Inspect those reviews individually.")
+            else:
+                st.info("No complaints were identified in this batch. Check the original reviews for anything the model may have missed.")
+        with praise:
+            st.markdown("### What guests appreciate")
+            positives = [(analysis.review.number, quote) for analysis in result.analyses for quote in analysis.extraction.positives]
+            if positives:
+                for number, quote in positives[:3]:
+                    with st.container(border=True):
+                        st.caption(f"From review {number}")
+                        show_review_text(quote)
+                if len(positives) > 3:
+                    st.caption("More positive feedback is available in Review evidence.")
+            else:
+                st.caption("No positive feedback was extracted. The original reviews are available to check.")
 
-st.caption("No database or automatic report files. Download reports only when you want to keep them.")
+        st.markdown("### Practical next steps")
+        st.caption("These are recommendations based on the findings, not statements made by customers.")
+        if actions:
+            for number, (column, action) in enumerate(zip(st.columns(len(actions)), actions), 1):
+                with column:
+                    with st.container(border=True):
+                        st.markdown(f'<div class="rw-action-number">SUGGESTION {number:02d}</div>', unsafe_allow_html=True)
+                        st.write(action)
+        if not actions:
+            st.caption("No category-specific suggestion is available for this batch. Check the review evidence to decide on your next step.")
+        elif len(actions) < 3:
+            st.caption("These are the specific suggestions supported by the recognised complaint groups.")
+
+    with evidence:
+        st.caption("Original reviews and the exact quotations behind the findings.")
+        for analysis in result.analyses:
+            with st.expander(f"Review {analysis.review.number}"):
+                st.write("**Original review**")
+                show_review_text(analysis.review.text)
+                st.write("**Positive feedback**")
+                for quote in analysis.extraction.positives:
+                    show_review_text(quote)
+                if not analysis.extraction.positives:
+                    st.caption("None extracted.")
+                st.write("**Complaints**")
+                for item in analysis.extraction.complaints:
+                    show_review_text(f"{CATEGORIES[item.category]}: {item.quote}")
+                if not analysis.extraction.complaints:
+                    st.caption("None extracted.")
+    st.download_button("Download my feedback report", render_report(result), "reviewwise-feedback-report.txt", "text/plain", type="primary")
+    with st.expander("Report details"):
+        st.text(f"Model: {MODEL}\nModel digest: {result.model_digest}")
+        st.caption("This report covers the supplied batch. No calendar period or review authenticity has been verified.")
+
+st.markdown('<div class="rw-footer">ReviewWise · A clearer view of customer feedback for hospitality businesses in Luxembourg.</div>', unsafe_allow_html=True)

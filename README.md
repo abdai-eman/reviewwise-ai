@@ -32,7 +32,7 @@ installations. Windows execution still needs a real laptop test; see
 2. Right-click it, choose **Extract All**, then open the resulting folder.
    The launcher is directly inside this folder; no inner project folder is required.
 3. Double-click **`START_REVIEWWISE.bat`**. Wait for the app to open in your browser.
-   Keep the launcher window open. Paste reviews or upload a CSV, then click **Analyze reviews**.
+   Keep the launcher window open. Paste reviews or upload a CSV, then click **Find my next improvements**.
 
 **First launch:** the launcher reuses an installed **64-bit Python 3.11-3.15**
 and existing **Ollama**. If no compatible Python can be found, it asks before
@@ -51,6 +51,13 @@ the packages/model and starts services automatically. No package installation
 or model download is attempted when the existing setup is current. Stop the app
 with Ctrl+C in the launcher window. Ollama may remain running; quit its
 application separately if you want to release its resources.
+
+**Updating an existing copy with the redesigned interface:** stop the app first.
+Download and extract the current Windows package. Copy `app.py`, `assets/` and
+`.streamlit/` into your existing project folder, replacing matching files, then
+double-click its `START_REVIEWWISE.bat` again. Keep your existing `.venv` and
+review files. This UI update adds no dependencies and does not need a new model
+download. Refresh an already open browser tab with Ctrl+F5.
 
 The professor uses File Explorer and the browser. The developer terminal commands
 later in this README are not part of these setup steps. The GitHub **Code → Download ZIP**
