@@ -1,8 +1,11 @@
 REVIEWWISE - WINDOWS QUICK START
 
-1. Download the ZIP from the m3-mvp branch on GitHub.
+1. Download ReviewWise-M3-Windows.zip from the project's Windows download link.
 2. Right-click the ZIP, choose Extract All, and open the extracted folder.
 3. Double-click START_REVIEWWISE.bat (Windows may display it as START_REVIEWWISE).
+
+START_REVIEWWISE.bat is directly inside the extracted Windows package folder.
+Use File Explorer for these steps. No terminal commands or VS Code are needed.
 
 The launcher prepares everything and opens ReviewWise in your browser.
 Keep its window open while using the app. Close it with Ctrl+C when finished.

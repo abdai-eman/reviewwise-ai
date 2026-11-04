@@ -33,6 +33,17 @@ semester brief was read during M3 preparation. M2 evidence is unchanged.
 
 ## Simplified Windows startup
 
+The professor's package is `download/ReviewWise-M3-Windows.zip`, with no outer
+source-directory prefix. Its launcher is directly at the ZIP root. GitHub's
+generic source ZIP, by comparison, wraps the source in `reviewwise-ai-m3-mvp/`;
+Windows Extract All adds the chosen extraction destination around that folder.
+The dedicated package avoids the resulting extra navigation level. It is
+generated with `git archive` from committed source; `.gitattributes` excludes
+the download directory so generated packages do not include older ZIPs.
+
+The student prepares and validates the package. The professor does not run a
+packaging command, diagnostics or a script pasted into a terminal.
+
 `START_REVIEWWISE.bat` is the single entry point for first and later launches.
 It changes to its own project directory, detects 64-bit Python 3.12 (including
 the default per-user path after installation), and uses WinGet to install it
@@ -90,7 +101,7 @@ missed Luxembourgish feedback. Do not tune reference labels to the model's outpu
 
 ## Another-laptop protocol (required before submission)
 
-Give a person the final ZIP and README only. Record any help you provide.
+Give a person the dedicated Windows ZIP and README only. Record any help you provide.
 
 1. Record tester/date, OS/architecture, RAM, free disk and existing Python/Ollama.
    Follow the three Windows README steps (or the five-step manual fallback)

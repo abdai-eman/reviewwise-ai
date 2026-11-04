@@ -156,3 +156,8 @@ warm starts and occupied ports are covered by the launcher logic/tests.
 37 offline tests pass on Linux; native Windows installation and real inference
 still need independent verification. Changes remain on `m3-mvp` only.
 
+Added a dedicated Windows ZIP with START_REVIEWWISE.bat at its root, avoiding
+GitHub's extra source-folder level after extraction. The professor-facing path
+uses download, Extract All and double-click; terminal diagnostics are not part
+of that handoff. Windows execution still needs the independent laptop check.
+

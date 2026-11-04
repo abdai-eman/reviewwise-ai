@@ -28,9 +28,9 @@ uses **WinGet**, included with Windows App Installer on standard Windows 11
 installations. Windows execution still needs a real laptop test; see
 [the recorded evidence](docs/m3_validation.md).
 
-1. Open the [M3 branch](https://github.com/abdai-eman/reviewwise-ai/tree/m3-mvp)
-   and choose **Code → Download ZIP**.
-2. Right-click the downloaded ZIP, choose **Extract All**, then open the extracted folder.
+1. Download the [Windows package, ReviewWise-M3-Windows.zip](https://github.com/abdai-eman/reviewwise-ai/raw/refs/heads/m3-mvp/download/ReviewWise-M3-Windows.zip).
+2. Right-click it, choose **Extract All**, then open the resulting folder.
+   The launcher is directly inside this folder; no inner project folder is required.
 3. Double-click **`START_REVIEWWISE.bat`**. Wait for the app to open in your browser.
    Keep the launcher window open. Paste reviews or upload a CSV, then click **Analyze reviews**.
 
@@ -49,6 +49,11 @@ the packages/model and starts services automatically. No package installation
 or model download is attempted when the existing setup is current. Stop the app
 with Ctrl+C in the launcher window. Ollama may remain running; quit its
 application separately if you want to release its resources.
+
+The professor uses File Explorer and the browser. The developer terminal commands
+later in this README are not part of these setup steps. The GitHub **Code → Download ZIP**
+option is still available for the source repository, but that ZIP adds an inner
+`reviewwise-ai-m3-mvp` folder; the Windows package above avoids that extra level.
 
 **Fallback when WinGet is unavailable:** first install
 [64-bit Python 3.12](https://www.python.org/downloads/windows/) with pip and the
