@@ -18,13 +18,15 @@ JSON, categories and quotations, counts distinct review IDs per complaint, and
 creates a downloadable template report with up to three supported actions.
 No database, cloud AI, API key or Docker is required. See `docs/architecture.svg`.
 
-**Installation.** Five README steps: install 64-bit Python 3.12; install/open
-Ollama; download/extract the ZIP; run `setup.bat`; run `start.bat`. Setup creates
-`.venv`, installs hash-checked pinned packages and downloads the model. Later
-starts reuse them. Model size is approximately 1.9 GB (unverified estimate);
-16 GB RAM is a planning recommendation, not a measured minimum.
+**Installation.** On Windows 11 with App Installer/WinGet: download the M3 ZIP,
+extract it, double-click `START_REVIEWWISE.bat`. First launch installs missing
+Python 3.12/Ollama for the current user, creates `.venv`, installs hash-checked
+packages, downloads the model and opens the app. Later starts use the same file.
+Without WinGet, manually installing Python/Ollama adds two prerequisites: five
+steps total. The model is about 1.9 GB (unverified estimate); 16 GB RAM is a
+planning recommendation, not a measured minimum.
 
-**Evidence and status.** 24 offline logic/UI tests pass on Linux. Package install
+**Evidence and status.** 37 offline logic/UI/launcher tests pass on Linux. Package install
 and native Ollama 0.40.14 startup work. Cloud policy blocks the model registry,
 so no real M3 inference or accuracy improvement is claimed. M2 evidence is
 unchanged. Windows setup, a real-input run, another person's laptop test,

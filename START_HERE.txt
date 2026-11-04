@@ -1,0 +1,21 @@
+REVIEWWISE - WINDOWS QUICK START
+
+1. Download the ZIP from the m3-mvp branch on GitHub.
+2. Right-click the ZIP, choose Extract All, and open the extracted folder.
+3. Double-click START_REVIEWWISE.bat (Windows may display it as START_REVIEWWISE).
+
+The launcher prepares everything and opens ReviewWise in your browser.
+Keep its window open while using the app. Close it with Ctrl+C when finished.
+Next time, double-click the SAME file again.
+
+First launch needs internet and can take several minutes. On Windows 11 with
+App Installer / WinGet, it installs missing Python 3.12 and Ollama for your user
+account, installs the Python packages, and downloads qwen2.5:3b (about 1.9 GB).
+After successful setup, later launches reuse the installation.
+
+If WinGet is unavailable or software installation is restricted, install
+64-bit Python 3.12 and Ollama from their official websites, then retry:
+https://www.python.org/downloads/windows/
+https://ollama.com/download/windows
+
+See README.md for full requirements and current validation status.

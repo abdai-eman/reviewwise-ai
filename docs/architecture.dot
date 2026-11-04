@@ -15,7 +15,7 @@ digraph ReviewWise {
     session [shape=cylinder, label="Temporary Streamlit session\nOriginal reviews + validated results\nNo database / no automatic report files", fillcolor="#e7f5ec"];
     weights [shape=cylinder, label="Ollama model files on local disk\nInstalled digest recorded by doctor/report", fillcolor="#e7f5ec"];
     download [shape=note, label="Explicit .txt report download\nUser controls retention", fillcolor="#e7f5ec"];
-    setup [label="setup.bat / setup.sh + scripts/manage.py\n.venv + hash-locked requirements.txt\nstart.bat / start.sh: check and start services"];
+    setup [label="START_REVIEWWISE.bat + scripts/manage.py\nWinGet: missing Windows Python/Ollama prerequisites\n.venv + hash-locked requirements + model download\nSame launcher for first setup and later starts"];
     secrets [shape=note, label="No API keys or secrets required\nFixed loopback model destination\nLauncher disables Streamlit usage telemetry", fillcolor="#fff5dd"];
     browser -> python [label="review text"];
     prompt -> python [label="schema / instructions / settings"];
@@ -32,7 +32,7 @@ digraph ReviewWise {
     setup -> weights [style=dashed, label="initial model pull"];
     secrets -> python [style=dotted];
   }
-  internet [shape=box, fillcolor="#fcece9", label="EXTERNAL SERVICES — setup/downloads only\npython.org / official Ollama installer\nPyPI + package files / Ollama model registry\nNetwork metadata only; no review text"];
+  internet [shape=box, fillcolor="#fcece9", label="EXTERNAL SERVICES — setup/downloads only\nWinGet community source / python.org / Ollama installer\nPyPI + package files / Ollama model registry\nNetwork metadata only; no review text"];
   setup -> internet [style=dashed, label="installation/download requests"];
   internet -> setup [style=dashed, label="installers / Python packages / model files"];
 }

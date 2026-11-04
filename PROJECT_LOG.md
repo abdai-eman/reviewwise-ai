@@ -145,3 +145,14 @@ The implementation draft is prepared on the separate `m3-mvp` branch for team
 review and download. `main` and the M2 evidence remain unchanged. This branch
 does not establish that the remaining M3 inference/laptop checks have passed.
 
+### Startup simplification — 4 November 2026
+
+Added `START_REVIEWWISE.bat` as a single Windows entry point. First launch can
+install missing Python/Ollama through WinGet, prepare dependencies/model and
+open the browser; later launches reuse the installation. Updated the professor's
+instructions to download, extract and double-click, with a five-step manual
+fallback when WinGet is unavailable. Paths with spaces, failed preparation,
+warm starts and occupied ports are covered by the launcher logic/tests.
+37 offline tests pass on Linux; native Windows installation and real inference
+still need independent verification. Changes remain on `m3-mvp` only.
+

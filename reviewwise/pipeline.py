@@ -106,7 +106,7 @@ def require_model(client):
             "install it from ollama.com/download and run setup again."
         ) from exc
     raise ReviewWiseError(
-        f"The {MODEL} model is missing. Run setup.bat (Windows) or bash setup.sh "
+        f"The {MODEL} model is missing. Restart START_REVIEWWISE.bat (Windows) or run bash setup.sh "
         f"with internet access, or run: ollama pull {MODEL}"
     )
 

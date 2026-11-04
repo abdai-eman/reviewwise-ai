@@ -8,6 +8,7 @@ summary. Deadline: **16 November 2026, 23:59**.
 
 - [ ] Complete a real Ollama extraction/report run on new permitted input.
 - [ ] Follow the README on another person's laptop; record evidence in `m3_validation.md`.
+- [ ] Test `START_REVIEWWISE.bat` from a fresh Windows account with missing prerequisites, then repeat with internet disconnected after successful setup.
 - [ ] Record versions, model digest, latency and actual failure cases.
 - [ ] Confirm every member can explain and change the pipeline and launcher.
 - [ ] Confirm actual contributions since M2; update README and project log.

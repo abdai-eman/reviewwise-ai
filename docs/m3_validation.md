@@ -19,15 +19,40 @@ semester brief was read during M3 preparation. M2 evidence is unchanged.
 | Hash-verified dependency install and `pip check` | Passed | Packages install consistently on this Linux runtime. |
 | Fresh source-only setup in a path containing spaces | Packages passed; full setup blocked at model download | New `.venv` created and installed consistently; this is not a fresh Windows/laptop test. |
 | Windows x64 / Python 3.12 pip dry run | Passed | Required wheel artifacts were available with matching hashes. This does not execute Windows scripts or install on Windows. |
-| `python -m unittest discover -s tests -v` | 24 passed | Offline input, validation/retry, counting, setup-error and Streamlit UI tests. Fixtures/mocks do not validate real AI. |
+| `python -m unittest discover -s tests -v` | 37 passed | Offline input, extraction/retry, counting, UI and cold/warm launcher tests. Windows installer calls are mocked; this does not prove native Windows installation or real AI. |
 | Live Streamlit HTTP / Chromium browser check | Passed | Page loads; pasted input, valid/invalid CSV and real missing-model error work. No report appears on failure; no browser JavaScript errors. External browser requests were blocked during this test. |
 | `bash -n setup.sh start.sh` | Passed | Shell syntax only. |
 | Native Ollama startup | Passed | Service API responds; no model installed. |
+| Native Python automatic-launch path | Blocked at model pull | Existing dependencies are reused; the real model pull is denied by cloud policy and no ready application is claimed. |
+| Real occupied-port check | Passed | A reserved loopback port was avoided and the replacement port could be bound successfully. |
 | `scripts/manage.py setup` | Blocked at model pull | Configured proxy denies `registry.ollama.ai` with HTTP 403 / Forbidden. Package install and service startup succeeded first. |
 | `scripts/manage.py doctor` and `smoke` | Failed as expected: missing model | Nonzero exit and a specific remedy; no fabricated report. |
 | Real M3 extraction and semantic accuracy | Unrun | Requires successful model download and actual inference. |
 | Windows/macOS installation | Unrun | This Linux instance cannot establish Windows/macOS compatibility. |
 | Another person's laptop / offline restart | Unrun | A team member must perform these checks. |
+
+## Simplified Windows startup
+
+`START_REVIEWWISE.bat` is the single entry point for first and later launches.
+It changes to its own project directory, detects 64-bit Python 3.12 (including
+the default per-user path after installation), and uses WinGet to install it
+if missing. The Python launcher installs Ollama if needed on Windows, creates
+or refreshes `.venv` only when needed, pulls a missing model, starts/reuses
+Ollama, chooses an available loopback port and opens Streamlit.
+
+Official `microsoft/winget-pkgs` metadata was checked for `Python.Python.3.12`
+3.12.10 and `Ollama.Ollama` 0.40.14: both provide x64 per-user installers and
+SHA-256 hashes. No checksum/TLS bypass flags or PowerShell policy changes are
+used. WinGet selects the package versions available on the user's machine;
+record the installed versions in the laptop test. This verifies metadata and
+the intended installation route, not a Windows run.
+
+The new tests cover cold dependency installation, retaining checksum checks,
+warm-start reuse without downloads, missing WinGet/manual fallback, installer
+failure, missing-model pull and verification, ordering startup after prerequisites,
+and selecting an available port. The native `.bat`/WinGet path still requires
+execution on a real Windows laptop. The Linux cloud model download remains
+blocked; no complete first-launch or real-inference success is claimed.
 
 The cloud draft adds `registry.ollama.ai` to the existing network policy.
 Saving does not apply it. Review/save and publish through environment settings
@@ -68,7 +93,8 @@ missed Luxembourgish feedback. Do not tune reference labels to the model's outpu
 Give a person the final ZIP and README only. Record any help you provide.
 
 1. Record tester/date, OS/architecture, RAM, free disk and existing Python/Ollama.
-   Follow the five README steps in a writable path containing spaces. Record
+   Follow the three Windows README steps (or the five-step manual fallback)
+   in a writable path containing spaces. Record
    setup duration, every manual correction and help request.
 2. Enter new permitted reviews. Confirm real inference, evidence, complaint counts
    and report download. Record latency and `doctor` output.
