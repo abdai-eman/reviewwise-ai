@@ -151,6 +151,9 @@ activemq-data/
 
 # Environments
 .env
+
+# M3 local service logs and validation artifacts (never customer input in Git)
+.reviewwise/
 .envrc
 .venv
 env/

@@ -124,3 +124,24 @@ Electricity and hardware costs have not yet been measured.
 ### 7. Repository
 The project repository contains the AI experiments, saved results, and documentation.
 
+## M3 — MVP preparation (4 November 2026, draft)
+
+Prepared a Docker-free local interface with pasted/CSV input, Ollama structured
+extraction, Pydantic validation, Python counting, evidence inspection and
+downloadable template reports. Added hash-locked dependencies, Windows/Unix
+setup/start scripts, an exported diagram and M3 submission drafts. Original
+M2 files and evidence are unchanged.
+
+Validation: 24 offline unit/UI tests pass on Linux. Python dependencies install
+and native Ollama 0.40.14 starts. The cloud proxy blocks its model registry,
+so real M3 inference is not yet verified. No Windows/other-laptop test, video,
+M3 tag or submission is claimed. See `docs/m3_validation.md` and `docs/m3_submission.md`.
+
+Codex assisted with code, tests and documentation. Actual contributions since M2
+must be confirmed by the team; planned assignments are not proof of completed
+work. Every member must review and understand the implementation.
+
+The implementation draft is prepared on the separate `m3-mvp` branch for team
+review and download. `main` and the M2 evidence remain unchanged. This branch
+does not establish that the remaining M3 inference/laptop checks have passed.
+

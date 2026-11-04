@@ -1,0 +1,3 @@
+# Keep native Windows launcher line endings in Git and downloaded archives.
+*.bat -text whitespace=cr-at-eol
+*.sh text eol=lf
