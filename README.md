@@ -10,7 +10,12 @@ See [validation evidence](docs/m3_validation.md). M3 is not yet complete or subm
 ReviewWise helps café owners understand customer reviews in English, French,
 German and Luxembourgish. Paste reviews or upload a CSV, analyze them locally
 with Ollama and `qwen2.5:3b`, inspect complaint counts and supporting evidence,
-and download a report with practical actions. Python performs the counting;
+and download a weekly report with practical actions. Choose any day in the
+Monday–Sunday reporting week and supply the reviews collected during that week.
+Up to **1,000 reviews per report**, including an 80-row CSV, are accepted within
+the existing 1 MB file and 2,000-character-per-review limits. Every accepted row
+is analysed and counted; the input preview shows only the first 20.
+Python performs the counting;
 AI interprets the reviews. Incorrect interpretations remain possible.
 
 ## 2. Users and value proposition
@@ -19,7 +24,9 @@ For small-business owners in Luxembourg who need to understand multilingual
 feedback, ReviewWise turns supplied café reviews into traceable improvement
 suggestions. The current prototype focuses on cafés; hotels and restaurants
 are potential later users. Business owners/managers are the potential payers.
-Each batch represents one business; review dates are not verified.
+Each report represents one business and a reporting week selected by the user.
+Review dates are not verified or filtered: the supplied file must contain only
+the intended week's reviews. Other CSV columns, including dates, remain ignored.
 
 ## 3. How to run it (three steps on Windows)
 
@@ -53,11 +60,24 @@ with Ctrl+C in the launcher window. Ollama may remain running; quit its
 application separately if you want to release its resources.
 
 **Updating an existing copy with the redesigned interface:** stop the app first.
-Download and extract the current Windows package. Copy `app.py`, `assets/` and
-`.streamlit/` into your existing project folder, replacing matching files, then
+Download and extract the current Windows package. Copy `app.py`, `reviewwise/`,
+`assets/` and `.streamlit/` into your existing project folder, replacing matching files, then
 double-click its `START_REVIEWWISE.bat` again. Keep your existing `.venv` and
 review files. This UI update adds no dependencies and does not need a new model
 download. Refresh an already open browser tab with Ctrl+F5.
+
+**Weekly workflow and waiting time:** choose the reporting week, upload its
+reviews or paste one per line, then select **Find my next improvements**.
+A new report calls the real model for each distinct uncached review; it is not
+instant and a large first run can take several minutes or longer on a laptop.
+Actual first-run time for 80 new reviews has not been measured here.
+Completed, validated extractions stay in the current session. Retrying after
+a failure reuses completed work; repeating the same input reuses the matching
+extractions. A model-weight, prompt, schema or generation-setting change requires
+fresh extraction. Reused analyses are labelled in the screen and download.
+No automatic report/cache files are written. Keep the same session open for a
+class presentation; **Start over**, closing the app or restarting it can lose
+the cache. Download a finished report if you need to keep it.
 
 The professor uses File Explorer and the browser. The developer terminal commands
 later in this README are not part of these setup steps. The GitHub **Code → Download ZIP**
@@ -118,9 +138,13 @@ The smoke command calls the real model; unit/UI fixtures are not proof of AI qua
 
 The browser talks to a local Streamlit process. Python validates input and sends
 one review at a time to local Ollama with a JSON schema. It validates the returned
-types, categories and verbatim evidence quotes, then counts distinct review IDs
+types, categories and verbatim evidence quotes. A temporary session cache reuses
+matching validated extractions and revalidates their evidence before reuse.
+Python then counts distinct review IDs
 per complaint. A template report presents counts, positive evidence and up to
-three supported actions. Unknown complaints remain visible as “other.” No second
+three supported actions for the user-selected week. The date range labels the
+supplied input; it does not establish when reviews were written.
+Unknown complaints remain visible as “other.” No second
 model call rewrites counts. Reviews and results stay in the browser/server
 session; only an explicit download creates a report. No database or API secrets
 are required. Package/model downloads contact external services during setup;
@@ -166,10 +190,13 @@ outcomes and the test protocol are in [docs/m3_validation.md](docs/m3_validation
 2. Counts are exact for extracted labels, not guaranteed true complaint counts.
 3. Six café categories are limited. “Other” may combine unrelated complaints;
    inspect them individually. Actions cover only recognized categories.
-4. Batches are limited to ten reviews of at most 2,000 characters each. CPU
-   analysis can be slow. A failed review stops the batch without a complete report.
+4. Reports accept up to 1,000 reviews of at most 2,000 characters each; CSVs
+   must fit within 1 MB. CPU analysis can be slow, especially for a new 80-review
+   file. A failed review stops the report; retrying the same input in the same
+   session reuses completed validated analyses.
 5. Duplicate rows count separately. Dates, business identity and authenticity
-   are not verified. A batch is not automatically a calendar week.
+   are not verified. The reporting week is user-supplied; input dates are not
+   checked or filtered. Only upload reviews for the intended week.
 6. Windows installation and real M3 inference are not yet verified here.
 
 Remove unnecessary personal details before use. Review text goes only to
@@ -190,8 +217,10 @@ M1 cited approximately 2,675 accommodation/food-service businesses in 2022
 this is a broad sector total, not a verified café market size. The interviews
 in `PROJECT_LOG.md` did not establish a willingness-to-pay amount.
 
-A ten-review batch needs 10 extraction calls × €0 metered local API fee = **€0
-metered API fees**; one retry per review permits up to 20 calls. Electricity,
+A first report of 80 distinct uncached reviews needs 80 extraction calls × €0
+metered local API fee = **€0 metered API fees**; one retry per review permits up
+to 160 calls. Reusing validated analyses requires no new extraction call for
+those rows, but still checks the installed model identity. Electricity,
 hardware and support costs remain unmeasured. Pricing and margins need customer
 evidence. Alternatives include Trustpilot Business, Birdeye and manual reading;
 the proposed advantage is local multilingual analysis with inspectable evidence.

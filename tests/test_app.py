@@ -1,6 +1,7 @@
 """UI checks use explicit fixtures, never presented as live AI validation."""
 
 from pathlib import Path
+from datetime import date
 import unittest
 from unittest.mock import patch
 
@@ -92,7 +93,7 @@ class AppTests(unittest.TestCase):
             analyze.assert_called_once()
 
     def test_partial_failure_keeps_input_and_does_not_show_a_complete_report(self):
-        def fail(reviews, progress=None):
+        def fail(reviews, progress=None, cache=None):
             progress(1, len(reviews))
             raise ReviewWiseError("Review 2 could not be validated after two AI attempts.")
 
@@ -125,3 +126,37 @@ class AppTests(unittest.TestCase):
             self.assertNotIn('>Local processing<', markup)
             self.assertIn('>Configured model service<', markup)
             self.assertTrue(any("model.example.test" in item.value for item in app.caption))
+
+    def test_eighty_row_upload_is_ready_without_truncation_or_automatic_ai_calls(self):
+        with patch("reviewwise.pipeline.analyze_reviews") as analyze:
+            app = open_app()
+            app.session_state.saved_csv = ("review\n" + "\n".join(f"Cold coffee {i}." for i in range(1, 81))).encode("utf-8")
+            app.session_state.saved_csv_name = "weekly-reviews.csv"
+            app.radio[0].set_value("Upload CSV").run()
+            self.assertEqual(len(app.exception), 0)
+            self.assertFalse(button(app, ACTION).disabled)
+            self.assertTrue(any(item.value == "80 reviews ready to analyse." for item in app.caption))
+            self.assertTrue(any("All 80 are selected for analysis" in item.value for item in app.caption))
+            analyze.assert_not_called()
+
+    def test_reporting_week_can_change_without_reanalysing_unchanged_reviews(self):
+        fixture = BatchResult([Analysis(Review(1, "Cold coffee."), Extraction(
+            positives=[], complaints=[{"category": "cold_coffee", "quote": "Cold coffee."}],
+        ))], 0.1, "offline-ui-fixture")
+        with patch("reviewwise.pipeline.analyze_reviews", return_value=fixture) as analyze:
+            app = open_app()
+            app.text_area[0].input("Cold coffee.").run()
+            button(app, ACTION).click().run()
+            app.date_input[0].set_value(date(2026, 11, 12)).run()
+            self.assertEqual(len(app.exception), 0)
+            self.assertIn("result", app.session_state)
+            self.assertTrue(any("09 Nov 2026 – 15 Nov 2026" in item.value for item in app.markdown))
+            analyze.assert_called_once()
+
+    def test_missing_week_disables_analysis_with_a_useful_message(self):
+        app = open_app()
+        app.text_area[0].input("Cold coffee.").run()
+        app.date_input[0].set_value(None).run()
+        self.assertEqual(len(app.exception), 0)
+        self.assertTrue(button(app, ACTION).disabled)
+        self.assertTrue(any("Choose a day in the reporting week" in item.value for item in app.warning))

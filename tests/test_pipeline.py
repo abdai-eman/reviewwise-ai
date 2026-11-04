@@ -1,6 +1,7 @@
 """Offline logic tests. Mock responses here are NOT evidence of working AI."""
 
 import json
+from datetime import date
 from pathlib import Path
 from types import SimpleNamespace
 import unittest
@@ -9,13 +10,13 @@ from unittest.mock import Mock, patch
 import httpx
 from pydantic import ValidationError
 
-from reviewwise.config import MODEL
+from reviewwise.config import MAX_REVIEWS, MODEL
 from reviewwise.pipeline import (
     Analysis, BatchResult, Extraction, Review, ReviewWiseError, analyze_reviews,
     complaint_rows, extract_review, make_reviews, require_model,
     reviews_from_csv, reviews_from_text, validate_extraction,
 )
-from reviewwise.report import render_report, suggested_actions
+from reviewwise.report import render_report, reporting_week, suggested_actions
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -31,7 +32,7 @@ class InputTests(unittest.TestCase):
         self.assertEqual(reviews, [Review(1, "Café froid."), Review(2, "De Kaffi war kal.")])
 
     def test_empty_oversized_and_too_many_reviews_are_rejected(self):
-        for texts in ([], [" "], ["x" * 2001], ["review"] * 11):
+        for texts in ([], [" "], ["x" * 2001], ["review"] * (MAX_REVIEWS + 1)):
             with self.subTest(texts=len(texts)), self.assertRaises(ReviewWiseError):
                 make_reviews(texts)
 
@@ -43,6 +44,15 @@ class InputTests(unittest.TestCase):
         for data in (b"text\ncoffee", b"review,review\na,b", b"review\na,b", b'\xff', b'review\n"unterminated'):
             with self.subTest(data=data), self.assertRaises(ReviewWiseError):
                 reviews_from_csv(data)
+
+    def test_weekly_csv_accepts_all_eighty_reviews(self):
+        data = ("review\n" + "\n".join(f"Review {i}: Cold coffee." for i in range(1, 81))).encode("utf-8")
+        reviews = reviews_from_csv(data)
+        self.assertEqual(len(reviews), 80)
+        self.assertEqual(reviews[-1], Review(80, "Review 80: Cold coffee."))
+
+    def test_documented_weekly_limit_is_accepted(self):
+        self.assertEqual(len(make_reviews(["Cold coffee."] * MAX_REVIEWS)), MAX_REVIEWS)
 
 
 class ExtractionTests(unittest.TestCase):
@@ -109,6 +119,116 @@ class ExtractionTests(unittest.TestCase):
             client.chat.side_effect = [response(self.good), ConnectionError("test disconnect")]
             with self.assertRaisesRegex(ReviewWiseError, "review 2"):
                 analyze_reviews(make_reviews([self.review.text, "The service was slow."]))
+
+
+class SessionReuseTests(unittest.TestCase):
+    """Offline fixtures verify reuse mechanics, never real-model speed or accuracy."""
+
+    def setUp(self):
+        patcher = patch("reviewwise.pipeline.local_client")
+        self.addCleanup(patcher.stop)
+        self.client = patcher.start().return_value.__enter__.return_value
+        self.client.list.return_value = SimpleNamespace(models=[SimpleNamespace(model=MODEL, digest="fixture-A")])
+
+        def answer(**kwargs):
+            text = json.loads(kwargs["messages"][1]["content"])["review"]
+            return response(json.dumps({
+                "positives": [], "complaints": [{"category": "cold_coffee", "quote": text}],
+            }))
+
+        self.answer = answer
+        self.client.chat.side_effect = answer
+
+    def test_all_eighty_reviews_are_counted_and_repeated_report_avoids_new_ai_calls(self):
+        reviews = make_reviews([f"Cold coffee, review {i}." for i in range(1, 81)])
+        cache = {}
+        first = analyze_reviews(reviews, cache=cache)
+        self.assertEqual(self.client.chat.call_count, 80)
+        self.assertEqual(len(first.analyses), 80)
+        self.assertEqual(first.reused_reviews, 0)
+        self.client.chat.reset_mock()
+        progress = Mock()
+        second = analyze_reviews(reviews, cache=cache, progress=progress)
+        self.client.chat.assert_not_called()
+        self.assertEqual(second.reused_reviews, 80)
+        self.assertEqual(complaint_rows(second.analyses)[0]["Reviews"], 80)
+        self.assertEqual(complaint_rows(second.analyses)[0]["Review numbers"], ", ".join(map(str, range(1, 81))))
+        self.assertEqual(progress.call_count, 80)
+        progress.assert_called_with(80, 80)
+        report = render_report(second, reporting_day=date(2026, 11, 4))
+        self.assertIn("Reviews analyzed: 80", report)
+        self.assertIn("Review 80: Cold coffee, review 80.", report)
+        self.assertIn("New AI analyses: 0", report)
+        self.assertIn("reused from this session: 80", report)
+
+    def test_failed_report_can_resume_from_completed_validated_reviews(self):
+        reviews = make_reviews([f"Cold coffee {i}." for i in range(1, 5)])
+        cache = {}
+        self.client.chat.side_effect = [
+            self.answer(messages=[None, {"content": json.dumps({"review": reviews[0].text})}]),
+            self.answer(messages=[None, {"content": json.dumps({"review": reviews[1].text})}]),
+            ConnectionError("fixture disconnect"),
+        ]
+        with self.assertRaisesRegex(ReviewWiseError, "review 3"):
+            analyze_reviews(reviews, cache=cache)
+        self.assertEqual(len(cache), 2)
+        self.client.chat.reset_mock()
+        self.client.chat.side_effect = self.answer
+        result = analyze_reviews(reviews, cache=cache)
+        self.assertEqual(self.client.chat.call_count, 2)
+        self.assertEqual(result.reused_reviews, 2)
+        self.assertEqual(len(result.analyses), 4)
+
+    def test_identical_text_reuses_extraction_but_each_input_row_still_counts(self):
+        result = analyze_reviews(make_reviews(["Cold coffee."] * 80), cache={})
+        self.client.chat.assert_called_once()
+        self.assertEqual(result.reused_reviews, 79)
+        self.assertEqual(complaint_rows(result.analyses)[0]["Reviews"], 80)
+
+    def test_model_prompt_and_generation_changes_require_fresh_extraction(self):
+        reviews, cache = make_reviews(["Cold coffee."]), {}
+        analyze_reviews(reviews, cache=cache)
+        self.client.list.return_value.models[0].digest = "fixture-B"
+        analyze_reviews(reviews, cache=cache)
+        with patch("reviewwise.pipeline.EXTRACTION_PROMPT", "Different fixture prompt"):
+            analyze_reviews(reviews, cache=cache)
+        with patch("reviewwise.pipeline.EXTRACTION_OPTIONS", {"temperature": 0, "num_ctx": 2048, "num_predict": 1024}):
+            analyze_reviews(reviews, cache=cache)
+        self.assertEqual(self.client.chat.call_count, 4)
+
+    def test_invalid_cached_evidence_is_rejected_and_extracted_again(self):
+        reviews, cache = make_reviews(["Cold coffee."]), {}
+        analyze_reviews(reviews, cache=cache)
+        cache[next(iter(cache))] = json.dumps({"positives": ["Invented praise"], "complaints": []})
+        result = analyze_reviews(reviews, cache=cache)
+        self.assertEqual(self.client.chat.call_count, 2)
+        self.assertEqual(result.reused_reviews, 0)
+        self.assertEqual(complaint_rows(result.analyses)[0]["Reviews"], 1)
+
+    def test_missing_model_digest_does_not_reuse_unidentified_weights(self):
+        self.client.list.return_value.models[0].digest = None
+        reviews, cache = make_reviews(["Cold coffee."]), {}
+        analyze_reviews(reviews, cache=cache)
+        result = analyze_reviews(reviews, cache=cache)
+        self.assertEqual(self.client.chat.call_count, 2)
+        self.assertEqual(cache, {})
+        self.assertEqual(result.reused_reviews, 0)
+
+
+class WeeklyReportTests(unittest.TestCase):
+    def test_reporting_week_uses_monday_through_sunday_including_year_boundary(self):
+        self.assertEqual(reporting_week(date(2026, 11, 4)), (date(2026, 11, 2), date(2026, 11, 8)))
+        self.assertEqual(reporting_week(date(2026, 11, 8)), (date(2026, 11, 2), date(2026, 11, 8)))
+        self.assertEqual(reporting_week(date(2026, 12, 31)), (date(2026, 12, 28), date(2027, 1, 3)))
+
+    def test_download_labels_selected_period_and_does_not_claim_verified_dates(self):
+        result = BatchResult([Analysis(Review(1, "Friendly staff."), Extraction(
+            positives=["Friendly staff."], complaints=[],
+        ))], 0.2, "fixture")
+        report = render_report(result, reporting_day=date(2026, 11, 4))
+        self.assertIn("REVIEWWISE WEEKLY FEEDBACK REPORT", report)
+        self.assertIn("02 Nov 2026 - 08 Nov 2026 (selected by you)", report)
+        self.assertIn("input dates are not verified or filtered", report)
 
 
 class CountingTests(unittest.TestCase):

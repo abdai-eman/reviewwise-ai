@@ -1,5 +1,7 @@
 """Reports use validated extractions, fixed action templates and Python counts."""
 
+from datetime import timedelta
+
 from reviewwise.config import ACTIONS, CATEGORIES, MODEL
 from reviewwise.pipeline import complaint_rows
 
@@ -17,14 +19,30 @@ def suggested_actions(analyses):
     return actions
 
 
-def render_report(result):
+def reporting_week(day):
+    """The user supplies the period; input review dates are not inferred."""
+    monday = day - timedelta(days=day.weekday())
+    return monday, monday + timedelta(days=6)
+
+
+def render_report(result, reporting_day=None):
     lines = [
-        "REVIEWWISE FEEDBACK REPORT", "",
+        "REVIEWWISE WEEKLY FEEDBACK REPORT" if reporting_day else "REVIEWWISE FEEDBACK REPORT", "",
+    ]
+    if reporting_day:
+        start, end = reporting_week(reporting_day)
+        lines.extend([
+            f"Reporting week: {start:%d %b %Y} - {end:%d %b %Y} (selected by you)",
+            "Use only reviews from this week; input dates are not verified or filtered.", "",
+        ])
+    lines.extend([
         f"Reviews analyzed: {len(result.analyses)}",
         f"Model: {MODEL}", f"Model digest: {result.model_digest}",
-        f"Analysis time: {result.elapsed_seconds:.2f} seconds", "",
+        f"Report preparation time: {result.elapsed_seconds:.2f} seconds",
+        f"New AI analyses: {len(result.analyses) - result.reused_reviews}",
+        f"Validated analyses reused from this session: {result.reused_reviews}", "",
         "COMPLAINTS (counted by Python)",
-    ]
+    ])
     rows = complaint_rows(result.analyses)
     for row in rows:
         lines.append(f"- {row['Complaint']}: {row['Reviews']} review(s); reviews {row['Review numbers']}")

@@ -1,6 +1,7 @@
 """The only AI step is extraction; Python validates and counts its results."""
 
 import csv
+import hashlib
 import io
 import json
 import time
@@ -15,6 +16,9 @@ from reviewwise.config import (
     CATEGORIES, MAX_REVIEW_LENGTH, MAX_REVIEWS, MODEL, OLLAMA_URL, REQUEST_TIMEOUT,
 )
 from reviewwise.prompts import EXTRACTION_PROMPT
+
+
+EXTRACTION_OPTIONS = {"temperature": 0, "num_ctx": 4096, "num_predict": 1024}
 
 
 class ReviewWiseError(Exception):
@@ -53,6 +57,7 @@ class BatchResult:
     analyses: list[Analysis]
     elapsed_seconds: float
     model_digest: str
+    reused_reviews: int = 0
 
 
 def make_reviews(texts):
@@ -60,7 +65,7 @@ def make_reviews(texts):
     if not texts:
         raise ReviewWiseError("Enter at least one nonempty review.")
     if len(texts) > MAX_REVIEWS:
-        raise ReviewWiseError(f"Use at most {MAX_REVIEWS} reviews per batch.")
+        raise ReviewWiseError(f"Use at most {MAX_REVIEWS:,} reviews per report.")
     for number, text in enumerate(texts, 1):
         if len(text) > MAX_REVIEW_LENGTH:
             raise ReviewWiseError(
@@ -130,7 +135,7 @@ def extract_review(client, review):
                 model=MODEL,
                 messages=messages,
                 format=Extraction.model_json_schema(),
-                options={"temperature": 0, "num_ctx": 4096, "num_predict": 1024},
+                options=dict(EXTRACTION_OPTIONS),
                 keep_alive="5m",
             )
         except httpx.TimeoutException as exc:
@@ -162,19 +167,44 @@ def extract_review(client, review):
             ])
 
 
-def analyze_reviews(reviews, progress=None):
+def extraction_cache_key(review, digest):
+    """Reuse only identical input, model weights, prompt, schema and settings."""
+    payload = {
+        "review": review.text, "model": MODEL, "digest": digest, "host": OLLAMA_URL,
+        "prompt": EXTRACTION_PROMPT, "schema": Extraction.model_json_schema(),
+        "options": EXTRACTION_OPTIONS,
+    }
+    return hashlib.sha256(json.dumps(payload, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()
+
+
+def analyze_reviews(reviews, progress=None, cache=None):
     # Validate again at the boundary, including callers other than the UI.
     reviews = make_reviews([review.text for review in reviews])
     start = time.perf_counter()
     with local_client() as client:
         digest = require_model(client)
         analyses = []
+        reused = 0
         for review in reviews:
-            extraction = extract_review(client, review)
+            key = extraction_cache_key(review, digest) if cache is not None and digest != "unknown" else None
+            extraction = None
+            if key is not None and key in cache:
+                try:
+                    extraction = validate_extraction(cache[key], review)
+                    reused += 1
+                except (ValueError, TypeError):
+                    cache.pop(key, None)
+            if extraction is None:
+                extraction = extract_review(client, review)
+                if key is not None:
+                    # The caller owns this temporary session cache; no review files are written.
+                    while len(cache) >= MAX_REVIEWS:
+                        cache.pop(next(iter(cache)))
+                    cache[key] = extraction.model_dump_json()
             analyses.append(Analysis(review, extraction))
             if progress:
                 progress(len(analyses), len(reviews))
-    return BatchResult(analyses, time.perf_counter() - start, digest)
+    return BatchResult(analyses, time.perf_counter() - start, digest, reused)
 
 
 def complaint_rows(analyses):

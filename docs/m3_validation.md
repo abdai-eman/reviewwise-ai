@@ -139,3 +139,33 @@ Give a person the dedicated Windows ZIP and README only. Record any help you pro
 | New-input report and correctness assessment | Pending |
 | Restart/offline/failure recovery | Pending |
 | OS support justified by the run | Pending |
+
+## Weekly-report correction — 4 November 2026
+
+The old ten-review prototype cap has been replaced by a 1,000-review report
+limit. The existing 1 MB CSV and 2,000-character-per-review limits remain.
+An 80-row file is accepted in full; only its input preview is shortened to
+20 rows. The user selects a Monday–Sunday reporting week. This labels the full
+input, not an automatic date filter; dates and review authenticity remain
+unverified. CSV files and M2 experiment evidence were not changed.
+
+| Check | Verified result | Scope |
+|---|---|---|
+| `.venv/bin/python -m unittest discover -s tests -v` | **58 passed**, Python 3.12 | Offline input, schema/quotation validation, retries, counting, weekly date labels, session reuse, UI and launcher checks. |
+| Production browser upload | 80 rows accepted, action enabled, correct full input count | Chromium, 1440px desktop and 390px mobile; fictional CSV constructed only in browser-test memory. |
+| Weekly result, chart and TXT download | All 80 review references retained; known fixture counts 27, 27, 26; selected week and its unverified-date caveat included | Clearly labelled SDK-response fixture; real pipeline validation, counting, report rendering and download. **Not a live model run or speed benchmark.** |
+| Repeat report in the same session | 80 validated extractions reused; zero additional extraction calls | SDK-response fixture with a call counter; reuse is labelled in the UI and TXT. Ollama/model identity is still checked. |
+| Interrupted report | Failure on review 3 produced no complete report; retry reused the two completed analyses and finished all 80 rows | SDK-response fixture; no fabricated partial success. |
+| Cache isolation | Changed model digest, prompt or generation settings cause fresh extraction; corrupted evidence is rejected | Offline tests; an unknown digest disables reuse. Schema is included in the cache key. |
+| Weekly selection | Monday–Sunday boundaries, year boundary, cleared-date state and changing week without re-extracting unchanged input passed | Offline logic/UI tests. |
+| Rendered UI | Desktop/mobile upload and report inspected; no horizontal overflow, external requests or browser errors | Local Chromium; result states use explicit fixtures. |
+| Architecture and summary | Current cache/weekly flow included in exported SVG; refreshed summary draft is one A4 page | Generated from the tracked DOT and Markdown source. |
+| Live model readiness | Direct local SDK check reports `qwen2.5:3b` missing | No new model/dependency installation or inference attempt. Current test environment's launcher setup marker is also absent, so `doctor` stops at its setup check. Earlier clean-setup observations above are historical. |
+
+First-run time and accuracy for 80 new reviews on the Windows laptop remain
+**unverified**. The existing model, extraction prompt, generation settings and
+Python counting rules are preserved. Raising the input limit does not accelerate
+new model calls. Reuse only helps identical previously validated input with the
+same model/prompt/schema/settings; no cache or report is automatically written
+to disk. **Start over** clears the cache. Closing or restarting the app can lose
+session state. A class demo must identify reused reports and any cut waiting time.

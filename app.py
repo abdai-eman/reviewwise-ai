@@ -2,6 +2,7 @@
 
 import html
 import json
+from datetime import date
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -11,7 +12,7 @@ from reviewwise.config import CATEGORIES, MAX_REVIEW_LENGTH, MAX_REVIEWS, MODEL,
 from reviewwise.pipeline import (
     ReviewWiseError, analyze_reviews, complaint_rows, reviews_from_csv, reviews_from_text,
 )
-from reviewwise.report import render_report, suggested_actions
+from reviewwise.report import render_report, reporting_week, suggested_actions
 
 
 ROOT = Path(__file__).parent
@@ -90,7 +91,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 st.caption("Interpretations can vary by language, especially Luxembourgish. The original reviews stay available to check.")
 
-for key, default in [("saved_review_text", ""), ("saved_csv", b""), ("saved_csv_name", "")]:
+for key, default in [("saved_review_text", ""), ("saved_csv", b""), ("saved_csv_name", ""), ("analysis_cache", {})]:
     st.session_state.setdefault(key, default)
 
 workspace, companion = st.columns([2.05, 1], gap="large")
@@ -102,6 +103,17 @@ with workspace:
         else:
             st.caption(f"Before you begin, remove names and personal details. Reviews are sent to {HOST or 'an unconfirmed location'}; check the details before using personal information.")
 
+        reporting_day = st.date_input(
+            "Reporting week — choose any day", value=date.today(), key="reporting_day",
+            format="DD/MM/YYYY", width=250,
+        )
+        if reporting_day:
+            week_start, week_end = reporting_week(reporting_day)
+            week_label = f"{week_start:%d %b %Y} – {week_end:%d %b %Y}"
+            st.caption(f"Monday–Sunday: {week_label}. Include only reviews from this week. The period is selected by you; review dates aren’t automatically checked or filtered.")
+        else:
+            st.warning("Choose a day in the reporting week to enable analysis.")
+
         mode = st.radio("Review input", ["Paste reviews", "Upload CSV"], key="input_mode", horizontal=True, label_visibility="collapsed")
         if mode == "Paste reviews":
             if "_review_text" not in st.session_state:
@@ -109,9 +121,9 @@ with workspace:
             text = st.text_area(
                 "One review per line", key="_review_text", on_change=save_text, height=150,
                 placeholder="The staff were friendly, but the coffee was cold.\nLe service était agréable, mais nous avons attendu longtemps.",
-                max_chars=25_000,
+                max_chars=MAX_REVIEWS * (MAX_REVIEW_LENGTH + 1),
             )
-            st.caption(f"Up to {MAX_REVIEWS} reviews · {MAX_REVIEW_LENGTH:,} characters per review.")
+            st.caption(f"Up to {MAX_REVIEWS:,} reviews per report · {MAX_REVIEW_LENGTH:,} characters per review.")
             raw_input = (mode, text)
             try:
                 reviews, input_error = reviews_from_text(text), None
@@ -122,7 +134,7 @@ with workspace:
                 "Choose a CSV file", type=["csv"], key="_csv_upload", on_change=save_csv,
                 max_upload_size=1, help="Use UTF-8 and a column named review. Other columns are not sent for analysis.",
             )
-            st.caption(f"A column named ‘review’ is required · UTF-8 · Under 1 MB · Up to {MAX_REVIEWS} reviews.")
+            st.caption(f"A column named ‘review’ is required · UTF-8 · Under 1 MB · Up to {MAX_REVIEWS:,} reviews per report.")
             if st.session_state.saved_csv_name:
                 st.caption(f"Loaded: {st.session_state.saved_csv_name}")
             data = st.session_state.saved_csv
@@ -134,13 +146,14 @@ with workspace:
                 reviews, input_error = [], str(exc)
 
         # Keep drafts across input-mode changes; show a report only for its matching input.
-        if st.session_state.get("result_input") == raw_input and "last_result" in st.session_state:
+        if reporting_day and st.session_state.get("result_input") == raw_input and "last_result" in st.session_state:
             st.session_state.result = st.session_state.last_result
         else:
             st.session_state.pop("result", None)
 
         if reviews:
             st.caption(f"{review_count_label(len(reviews))} ready to analyse.")
+            st.caption("Every accepted review is included. New reviews are analysed one at a time; a large report can take several minutes or longer on a laptop. Repeat reports reuse validated analyses from this session.")
             if len({review.text for review in reviews}) < len(reviews):
                 st.warning("Some reviews are identical. Each input row will count as a separate review.")
         elif (mode == "Paste reviews" and text.strip()) or (mode == "Upload CSV" and data):
@@ -149,11 +162,13 @@ with workspace:
             st.caption("Add a review or try the fictional sample to enable analysis." if mode == "Paste reviews" else "Upload a CSV or try the fictional sample to enable analysis.")
 
         with st.container(key="primary_action"):
-            start_analysis = st.button("Find my next improvements", type="primary", disabled=not reviews, width="stretch")
+            start_analysis = st.button("Find my next improvements", type="primary", disabled=not reviews or not reporting_day, width="stretch")
 
         if reviews:
             with st.expander(f"Preview {review_count_label(len(reviews))}"):
-                for review in reviews:
+                if len(reviews) > 20:
+                    st.caption(f"Showing the first 20 of {len(reviews)} reviews. All {len(reviews)} are selected for analysis.")
+                for review in reviews[:20]:
                     show_review_text(f"{review.number}. {review.text}")
 
         st.button("Try sample reviews", on_click=load_sample)
@@ -171,7 +186,7 @@ with workspace:
 
             try:
                 with st.spinner("Looking for patterns in your reviews…"):
-                    result = analyze_reviews(reviews, progress=update_progress)
+                    result = analyze_reviews(reviews, progress=update_progress, cache=st.session_state.analysis_cache)
                 st.session_state.result = result
                 st.session_state.last_result = result
                 st.session_state.result_input = raw_input
@@ -180,6 +195,8 @@ with workspace:
                 st.error(title)
                 st.write(guidance)
                 st.caption(f"{finished['count']} of {review_count_label(len(reviews))} completed before the batch stopped. No complete report was created.")
+                if st.session_state.analysis_cache:
+                    st.caption("Completed, validated analyses are kept in this session. Retry the same input to reuse them and continue with the remaining reviews.")
                 with st.expander("Technical details"):
                     st.text(str(exc))
             finally:
@@ -198,6 +215,7 @@ with companion:
         st.write(f"Model host: {HOST or 'not confirmed'}")
         st.caption("AI extracts feedback. Python validates quotations and counts reviews. Suggestions use category-based action templates.")
         st.caption("No database or automatic report files. Your inputs stay in this session; download a report only if you want to keep it.")
+        st.caption(f"Up to {MAX_REVIEWS:,} validated analyses are retained in this session to speed up retries and repeat reports. Start over clears them; closing or restarting the app can lose them. Changed model weights, prompts or settings require fresh analysis.")
     if st.session_state.saved_review_text or st.session_state.saved_csv:
         st.button("Start over", on_click=clear_workspace, width="stretch")
 
@@ -207,8 +225,11 @@ if "result" in st.session_state:
     actions = suggested_actions(result.analyses)
     st.divider()
     st.markdown('<div class="rw-section-label">From feedback to focus</div>', unsafe_allow_html=True)
-    st.subheader("Your feedback report")
-    st.caption(f"{review_count_label(len(result.analyses))} successfully analysed · {result.elapsed_seconds:.1f} seconds")
+    st.subheader("Your weekly feedback report")
+    st.write(f"**{week_label}**")
+    st.caption("Reporting week selected by you. This report includes your full input; review dates are not verified or filtered.")
+    st.caption(f"{review_count_label(len(result.analyses))} included · Report prepared in {result.elapsed_seconds:.1f} seconds")
+    st.caption(f"{len(result.analyses) - result.reused_reviews} newly analysed by AI · {result.reused_reviews} reused from validated analyses in this session.")
     metrics = st.columns(3)
     for column, label, value in zip(metrics, ["Reviews analysed", "Complaint groups", "Suggested actions"], [len(result.analyses), len(rows), len(actions)]):
         column.metric(label, value, border=True)
@@ -294,9 +315,9 @@ if "result" in st.session_state:
                     show_review_text(f"{CATEGORIES[item.category]}: {item.quote}")
                 if not analysis.extraction.complaints:
                     st.caption("None extracted.")
-    st.download_button("Download my feedback report", render_report(result), "reviewwise-feedback-report.txt", "text/plain", type="primary")
+    st.download_button("Download my feedback report", render_report(result, reporting_day=reporting_day), f"reviewwise-week-{week_start.isoformat()}.txt", "text/plain", type="primary")
     with st.expander("Report details"):
         st.text(f"Model: {MODEL}\nModel digest: {result.model_digest}")
-        st.caption("This report covers the supplied batch. No calendar period or review authenticity has been verified.")
+        st.caption("This report covers all accepted reviews for your selected reporting week. Review dates, business identity and authenticity have not been verified.")
 
 st.markdown('<div class="rw-footer">ReviewWise · A clearer view of customer feedback for hospitality businesses in Luxembourg.</div>', unsafe_allow_html=True)

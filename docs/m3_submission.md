@@ -7,6 +7,7 @@ two lines on actual contributions since M2, a repository link and a one-page
 summary. Deadline: **16 November 2026, 23:59**.
 
 - [ ] Complete a real Ollama extraction/report run on new permitted input.
+- [ ] Test a full 80-review weekly file on the Windows laptop; record first-run time, repeat-run time and reuse counts. Confirm the chosen week matches the supplied reviews.
 - [ ] Follow the README on another person's laptop; record evidence in `m3_validation.md`.
 - [ ] Give the professor the dedicated Windows ZIP link, not terminal commands. Confirm START_REVIEWWISE.bat appears directly in its extracted folder.
 - [ ] Test `START_REVIEWWISE.bat` from a fresh Windows account with missing prerequisites, then repeat with internet disconnected after successful setup.
