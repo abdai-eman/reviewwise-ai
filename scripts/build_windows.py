@@ -33,7 +33,12 @@ def main():
         package.extractall(runtime)
     # Verify the PSF executable's Windows publisher signature before executing it.
     script = "$s=Get-AuthenticodeSignature $env:REVIEWWISE_PYTHON_TO_VERIFY; if ($s.Status -ne 'Valid' -or $s.SignerCertificate.Subject -notmatch 'Python Software Foundation') { throw 'Python publisher signature could not be verified' }"
-    run(['powershell', '-NoProfile', '-Command', script],
+    # Use the runner's current PowerShell edition and its matching module path.
+    # Launching legacy Windows PowerShell from pwsh inherits incompatible modules.
+    powershell = shutil.which('pwsh') or shutil.which('powershell')
+    if not powershell:
+        raise RuntimeError('The build machine needs PowerShell for publisher verification.')
+    run([powershell, '-NoProfile', '-Command', script],
         env={**os.environ, 'REVIEWWISE_PYTHON_TO_VERIFY': str(runtime / 'python.exe')})
     for folder in ('reviewwise', 'scripts', 'assets', '.streamlit'):
         shutil.copytree(ROOT / folder, staging / folder, ignore=shutil.ignore_patterns('__pycache__', '*.pyc', 'secrets.toml'))
