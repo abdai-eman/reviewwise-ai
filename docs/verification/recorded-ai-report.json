@@ -1,0 +1,177 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-11-05T11:57:27.884818+00:00",
+  "reporting_day": "2026-11-05",
+  "title": "Recorded AI example — fictional multilingual café reviews",
+  "provenance": "Real Ollama execution in Windows CI on fictional M2 input; dates are demonstration metadata.",
+  "model": "qwen2.5:3b",
+  "result": {
+    "analyses": [
+      {
+        "review": {
+          "number": 1,
+          "text": "The coffee was excellent, but the service was very slow."
+        },
+        "extraction": {
+          "positives": [],
+          "complaints": [
+            {
+              "category": "slow_service",
+              "quote": "the service was very slow."
+            }
+          ]
+        }
+      },
+      {
+        "review": {
+          "number": 2,
+          "text": "Great atmosphere and friendly staff!"
+        },
+        "extraction": {
+          "positives": [
+            "Great atmosphere and friendly staff!"
+          ],
+          "complaints": []
+        }
+      },
+      {
+        "review": {
+          "number": 3,
+          "text": "The staff were helpful, but my order was incorrect."
+        },
+        "extraction": {
+          "positives": [],
+          "complaints": [
+            {
+              "category": "incorrect_order",
+              "quote": "my order was incorrect."
+            }
+          ]
+        }
+      },
+      {
+        "review": {
+          "number": 4,
+          "text": "Le personnel était sympathique, mais mon café était froid."
+        },
+        "extraction": {
+          "positives": [],
+          "complaints": [
+            {
+              "category": "cold_coffee",
+              "quote": "mon café était froid."
+            }
+          ]
+        }
+      },
+      {
+        "review": {
+          "number": 5,
+          "text": "Le café était bon, mais les tables étaient sales."
+        },
+        "extraction": {
+          "positives": [
+            "Le café était bon,"
+          ],
+          "complaints": [
+            {
+              "category": "dirty_tables",
+              "quote": "les tables étaient sales."
+            }
+          ]
+        }
+      },
+      {
+        "review": {
+          "number": 6,
+          "text": "Der Kaffee war lecker, aber wir mussten lange warten."
+        },
+        "extraction": {
+          "positives": [
+            "Der Kaffee war lecker,"
+          ],
+          "complaints": [
+            {
+              "category": "slow_service",
+              "quote": "wir mussten lange warten."
+            }
+          ]
+        }
+      },
+      {
+        "review": {
+          "number": 7,
+          "text": "Das Personal war nett, aber die Preise waren zu hoch."
+        },
+        "extraction": {
+          "positives": [
+            "Das Personal war nett,"
+          ],
+          "complaints": [
+            {
+              "category": "high_prices",
+              "quote": "die Preise waren zu hoch."
+            }
+          ]
+        }
+      },
+      {
+        "review": {
+          "number": 8,
+          "text": "De Service war ganz lues an ech hu laang op mäi Kaffi gewaart."
+        },
+        "extraction": {
+          "positives": [],
+          "complaints": [
+            {
+              "category": "slow_service",
+              "quote": "De Service war ganz lues an ech hu laang op mäi Kaffi gewaart."
+            }
+          ]
+        }
+      },
+      {
+        "review": {
+          "number": 9,
+          "text": "D'Iesse war ganz gutt, mee d'Personal war net frëndlech."
+        },
+        "extraction": {
+          "positives": [
+            "D'Iesse war ganz gutt,"
+          ],
+          "complaints": [
+            {
+              "category": "unfriendly_staff",
+              "quote": "d'Personal war net frëndlech."
+            }
+          ]
+        }
+      },
+      {
+        "review": {
+          "number": 10,
+          "text": "De Kaffi war kal an d'Präisser waren ze héich."
+        },
+        "extraction": {
+          "positives": [],
+          "complaints": [
+            {
+              "category": "cold_coffee",
+              "quote": "De Kaffi war kal an d'Präisser waren ze héich."
+            }
+          ]
+        }
+      }
+    ],
+    "elapsed_seconds": 41.24843599999997,
+    "model_digest": "357c53fb659c5076de1d65ccb0b397446227b71a42be9d1603d46168015c9e4b",
+    "reused_reviews": 0,
+    "failures": [],
+    "pending": [],
+    "running": false,
+    "stop_reason": "",
+    "ai_requests": 7
+  },
+  "source_commit": "a0be8fd1a4130983d8a654f5ffb74956fc0a7673",
+  "workflow_run": "42022332321"
+}
