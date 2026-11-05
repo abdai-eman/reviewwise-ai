@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import platform
 import sys
+import time
 from dataclasses import asdict
 from datetime import datetime, timezone
 
@@ -58,6 +59,30 @@ def main():
         evidence['repeat'] = encode(repeated)
         if not repeated.complete or repeated.reused_reviews != len(texts) or repeated.ai_requests != 0:
             raise RuntimeError('The real-model repeat did not reuse all matching validated results.')
+        # Exercise the actual input button/background worker/report path as well.
+        # This uses the real SDK and running local model, without a response fixture.
+        from streamlit.testing.v1 import AppTest
+        app = AppTest.from_file(str(ROOT / 'app.py'), default_timeout=20).run()
+        if app.exception:
+            raise RuntimeError(f'The actual app could not open: {app.exception}')
+        app.text_area[0].input('The coffee was cold and the service was slow.').run()
+        next(button for button in app.button if button.label == 'Find my next improvements').click().run()
+        job = app.session_state['analysis_job']
+        deadline = time.monotonic() + 90
+        while job.running and time.monotonic() < deadline:
+            time.sleep(.1)
+        if job.running:
+            job.cancel()
+            raise RuntimeError('The real UI analysis did not finish within the verification deadline.')
+        app.run()
+        ui_result = app.session_state['result']
+        evidence['fresh_ui'] = encode(ui_result)
+        ui_categories = {row['category'] for row in complaint_rows(ui_result.analyses)}
+        if app.exception or not ui_result.complete or ui_result.ai_requests < 1 or not {'cold_coffee','slow_service'} <= ui_categories:
+            raise RuntimeError('The real input → button → worker → AI → report path did not produce a complete, supported result.')
+        if not any(item.value == 'Your weekly feedback report' for item in app.subheader):
+            raise RuntimeError('The actual app did not display the completed report.')
+        evidence['real_ui_report_displayed'] = True
         document = {
             'schema_version': 1, 'recorded_at': evidence['recorded_at'],
             'reporting_day': datetime.now(timezone.utc).date().isoformat(),
