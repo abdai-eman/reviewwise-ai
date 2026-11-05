@@ -131,7 +131,9 @@ jobs:
             git diff --cached --quiet
             if ($LASTEXITCODE -eq 1) {
               git commit -m 'Record native Windows AI verification [skip ci]'
-              git pull --rebase origin $env:EXPECTED_BRANCH
+              # Only generated evidence/package files are in this commit.
+              # During rebase, "theirs" keeps this run's newer generated output.
+              git pull --rebase --strategy-option=theirs origin $env:EXPECTED_BRANCH
               if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
               git push origin "HEAD:refs/heads/$env:EXPECTED_BRANCH"
               if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
