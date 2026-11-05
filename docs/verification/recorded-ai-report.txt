@@ -7,7 +7,7 @@ Reviews pending: 0
 Coverage: complete
 Model: qwen2.5:3b
 Model digest: 357c53fb659c5076de1d65ccb0b397446227b71a42be9d1603d46168015c9e4b
-Report preparation time: 41.21 seconds
+Report preparation time: 41.38 seconds
 New AI analyses: 10
 Validated analyses reused from this session: 0
 
