@@ -128,6 +128,81 @@ def requirements_digest():
     return hashlib.sha256((ROOT / "requirements.txt").read_bytes()).hexdigest()
 
 
+def environment_record():
+    directory = os.environ.get("LOCALAPPDATA") if platform.system() == "Windows" else None
+    return Path(directory) / "ReviewWise/environment.json" if directory else None
+
+
+def valid_environment(folder, digest):
+    """An existing environment is used in place; virtual environments are not moved."""
+    try:
+        executable = folder / "Scripts/python.exe"
+        marker = folder / ".reviewwise-requirements.sha256"
+        if not executable.is_file() or marker.read_text() != digest:
+            return None
+        subprocess.run(
+            [str(executable), "-c", "import sys,struct; assert (3,11) <= sys.version_info[:2] < (3,16) and struct.calcsize('P') == 8"],
+            check=True, timeout=5, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        )
+        return folder
+    except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError):
+        return None
+
+
+def find_saved_environment(record, digest):
+    try:
+        folder = Path(json.loads(record.read_text(encoding="utf-8"))["environment"])
+        return valid_environment(folder, digest)
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+
+
+def find_previous_environment(root, digest):
+    # Migrate earlier ZIP installations without searching unrelated directories.
+    for parent in dict.fromkeys([root.parent, root.parent.parent]):
+        try:
+            copies = list(parent.glob("[Rr]eview[Ww]ise*"))
+        except OSError:
+            continue
+        for copy in copies:
+            for project in [copy, copy / "reviewwise-ai-m3-mvp"]:
+                try:
+                    if project.resolve() == root.resolve():
+                        continue
+                    if hashlib.sha256((project / "requirements.txt").read_bytes()).hexdigest() != digest:
+                        continue
+                except OSError:
+                    continue
+                candidate = valid_environment(project / ".venv", digest)
+                if candidate:
+                    return candidate
+    return None
+
+
+def reuse_saved_environment():
+    global VENV, PYTHON, MARKER
+    record = environment_record()
+    if record is None or PYTHON.is_file():
+        return
+    digest = requirements_digest()
+    folder = find_saved_environment(record, digest) or find_previous_environment(ROOT, digest)
+    if folder:
+        VENV = folder
+        PYTHON = folder / "Scripts/python.exe"
+        MARKER = folder / ".reviewwise-requirements.sha256"
+        print(f"Reusing your installed ReviewWise packages: {folder}", flush=True)
+
+
+def remember_environment():
+    record = environment_record()
+    if record is not None:
+        try:
+            record.parent.mkdir(parents=True, exist_ok=True)
+            record.write_text(json.dumps({"environment": str(VENV.resolve())}), encoding="utf-8")
+        except OSError:
+            print("Could not remember this installation. Keep using this project folder to reuse its packages.", flush=True)
+
+
 def check_dependencies(verify_imports=True):
     if not PYTHON.is_file() or not MARKER.is_file() or MARKER.read_text() != requirements_digest():
         raise SetupError("Python dependencies need setup. Double-click START_REVIEWWISE.bat or run bash setup.sh.")
@@ -144,6 +219,7 @@ def ensure_dependencies(force=False):
     if not force:
         try:
             check_dependencies(verify_imports=False)
+            remember_environment()
             return
         except SetupError:
             pass
@@ -157,15 +233,21 @@ def ensure_dependencies(force=False):
         [str(PYTHON), "-c", "import sys,struct; assert (3,11) <= sys.version_info[:2] < (3,16) and struct.calcsize('P') == 8"],
         "The existing .venv uses an unsupported Python. Rename it, then rerun the launcher.",
     )
+    STATE.mkdir(exist_ok=True)
+    install_log = STATE / "install.log"
     print("Installing checksum-verified, pinned Python packages...", flush=True)
+    print(f"Environment: {VENV}", flush=True)
+    print("Download and installation progress follows. Keep this window open.", flush=True)
+    print(f"Detailed installation log: {install_log}", flush=True)
     run(
-        [str(PYTHON), "-m", "pip", "install", "--quiet", "--disable-pip-version-check",
+        [str(PYTHON), "-m", "pip", "--log", str(install_log), "install", "--progress-bar", "on", "--disable-pip-version-check",
          "--only-binary=:all:", "--require-hashes", "-r", str(ROOT / "requirements.txt")],
         "Dependency installation failed. Check internet access, proxy settings and free disk space. "
-        "The detailed pip error is above; do not disable TLS or checksum verification.",
+        "The detailed pip error is above and in .reviewwise/install.log; do not disable TLS or checksum verification.",
     )
     run([str(PYTHON), "-m", "pip", "check"], "Installed package versions are inconsistent. Rerun setup.")
     MARKER.write_text(requirements_digest())
+    remember_environment()
 
 
 def install_ollama_if_missing():
@@ -325,7 +407,7 @@ def doctor():
         raise SetupError(f"The {MODEL} model is missing. Run setup with internet access.")
     model = installed_model()
     print(json.dumps({
-        "python": platform.python_version(), "os": platform.platform(),
+        "python": subprocess.check_output([str(PYTHON), "-c", "import platform; print(platform.python_version())"], text=True).strip(), "os": platform.platform(),
         "ollama": status.get("version"), "model": MODEL,
         "digest": model.get("digest"), "model_bytes": model.get("size"),
     }, indent=2))
@@ -339,6 +421,7 @@ def main():
     parser.add_argument("--text", default="The coffee was cold and we waited too long.", help="Real model smoke-test input.")
     args = parser.parse_args()
     check_python()
+    reuse_saved_environment()
     if args.command == "setup":
         setup()
     elif args.command == "doctor":

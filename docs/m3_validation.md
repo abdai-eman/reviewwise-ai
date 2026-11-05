@@ -204,3 +204,24 @@ until its next streamed chunk or the 60-second read timeout. Cache state remains
 session-only. The next required work is a real model/prompt/80-review test after
 the pending model-download network setting is applied, followed by a measured
 Windows run. The current smoke command returns failure for an incomplete result.
+
+### Installer follow-up — 5 November 2026
+
+The user supplied a Windows launcher screenshot showing creation of a fresh
+project environment followed by the quiet package-install message. It establishes
+that the earlier environment was not reused at that point; it does not establish
+whether pip was downloading, installing or stalled. Elapsed time was requested.
+
+Current source removes quiet mode, enables actual pip download progress and
+writes `.reviewwise/install.log`. Successful Windows setups record their package
+environment in a per-user metadata file. New extracted copies can reuse the
+recorded environment in place after checking the requirement hash and Python
+compatibility. Migration also checks nearby ReviewWise folders with identical
+lock files. Missing, deleted, corrupt or incompatible records fall back to normal
+setup. No environment or CSV is moved, copied or deleted by this migration.
+
+**70 offline tests pass** on Python 3.12, including matching/mismatched and missing
+environment records and migration from nested ZIP folders while preserving CSV
+bytes. The installed pip supports the progress/log options. Native Windows timing
+and the user's currently running quiet installer remain unverified. Source edits
+do not change a process that has already loaded the older installer.

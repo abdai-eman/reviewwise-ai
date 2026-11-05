@@ -7,7 +7,7 @@ See [validation evidence](docs/m3_validation.md). M3 is not yet complete or subm
 
 **5 November runtime correction — awaiting real-model verification:** current
 source adds live partial results, cancellation, duplicate-run protection and
-compact evidence IDs. **67 offline tests and fixture browser checks pass.**
+compact evidence IDs. **70 offline tests and fixture browser checks pass.**
 This is not an AI speed or accuracy result. The Windows ZIP still contains the
 previous `3569de5` package; it will be refreshed only after a real Qwen check.
 
@@ -60,6 +60,19 @@ Internet and permission to install software are needed. Installation can take
 several minutes. No VS Code, terminal commands, Docker, Git, Node.js or API key
 is required. The launcher handles its own working directory, including paths
 with spaces, and chooses another local port if its preferred port is occupied.
+
+Package installation now shows pip's real download/install output and writes
+`.reviewwise/install.log`. A window showing only the old quiet-install message
+does not prove that installation is stalled; that process still uses the older
+installer code until it finishes or is stopped.
+
+On Windows, a successful setup records its environment location under
+`%LOCALAPPDATA%\ReviewWise\environment.json`. A new extracted copy can reuse it
+in place when its requirement hash and 64-bit Python compatibility match. For
+earlier versions without that record, the launcher checks nearby folders named
+ReviewWise for a matching completed installation. It never moves a virtual
+environment or edits review files. Keep the folder holding the reused environment;
+if it is deleted or its requirements differ, a fresh installation is needed.
 
 **Next time:** double-click **the same `START_REVIEWWISE.bat` file**. It reuses
 the packages/model and starts services automatically. No package installation

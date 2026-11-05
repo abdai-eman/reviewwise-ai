@@ -10,6 +10,51 @@ from scripts import manage
 
 
 class SetupTests(unittest.TestCase):
+    def test_previous_zip_installation_is_found_without_copying_its_venv_or_csv(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            old = root / 'reviewwise-ai-m3-mvp (1)' / 'reviewwise-ai-m3-mvp'
+            current = root / 'reviewwise-ai-m3-mvp (2)' / 'reviewwise-ai-m3-mvp'
+            current.mkdir(parents=True)
+            environment = old / '.venv'
+            (environment / 'Scripts').mkdir(parents=True)
+            (environment / 'Scripts/python.exe').write_text('test placeholder')
+            lock = b'pinned packages\n'
+            digest = manage.hashlib.sha256(lock).hexdigest()
+            (old / 'requirements.txt').write_bytes(lock)
+            (environment / '.reviewwise-requirements.sha256').write_text(digest)
+            csv = old / 'my-private-reviews.csv'
+            csv.write_text('unchanged input')
+            with patch.object(manage.subprocess, 'run'):
+                self.assertEqual(manage.find_previous_environment(current, digest), environment)
+            self.assertEqual(csv.read_text(), 'unchanged input')
+            self.assertFalse((current / '.venv').exists())
+
+    def test_matching_saved_windows_environment_is_reused_without_moving_it(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            environment = root / 'old project/.venv'
+            (environment / 'Scripts').mkdir(parents=True)
+            (environment / 'Scripts/python.exe').write_text('test placeholder')
+            (environment / '.reviewwise-requirements.sha256').write_text('same-lock')
+            record = root / 'environment.json'
+            record.write_text(json.dumps({'environment': str(environment)}))
+            with patch.object(manage.subprocess, 'run') as probe:
+                self.assertEqual(manage.find_saved_environment(record, 'same-lock'), environment)
+                probe.assert_called_once()
+            with patch.object(manage.subprocess, 'run') as probe:
+                self.assertIsNone(manage.find_saved_environment(record, 'changed-lock'))
+                probe.assert_not_called()
+            (environment / 'Scripts/python.exe').unlink()
+            self.assertIsNone(manage.find_saved_environment(record, 'same-lock'))
+
+    def test_missing_corrupted_or_unusable_saved_environment_falls_back_safely(self):
+        with TemporaryDirectory() as directory:
+            record = Path(directory) / 'environment.json'
+            self.assertIsNone(manage.find_saved_environment(record, 'lock'))
+            record.write_text('not JSON')
+            self.assertIsNone(manage.find_saved_environment(record, 'lock'))
+
     def test_wrong_python_has_a_specific_remedy(self):
         with patch.object(manage.sys, "version_info", (3, 10, 0)):
             with self.assertRaisesRegex(manage.SetupError, "64-bit Python 3.11-3.15"):
@@ -82,6 +127,8 @@ class AutomaticLaunchTests(unittest.TestCase):
             install = next(call.args[0] for call in run.call_args_list if "install" in call.args[0])
             self.assertIn("--require-hashes", install)
             self.assertIn("--only-binary=:all:", install)
+            self.assertNotIn("--quiet", install)
+            self.assertIn("--log", install)
             marker.write_text.assert_called_once_with("lock-hash")
 
     def test_dependency_failure_does_not_mark_setup_as_complete(self):
