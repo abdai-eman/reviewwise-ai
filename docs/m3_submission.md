@@ -6,7 +6,8 @@ architecture diagram, a three-minute unlisted video, three known limitations,
 two lines on actual contributions since M2, a repository link and a one-page
 summary. Deadline: **16 November 2026, 23:59**.
 
-- [ ] Complete a real Ollama extraction/report run on new permitted input.
+- [x] Verify actual Ollama extraction and a recorded report in native Windows CI on fictional input.
+- [ ] Assess new permitted real-world input and language accuracy; CI sentences are not customer-data evidence.
 - [ ] Test a full 80-review weekly file on the Windows laptop; record first-run time, repeat-run time and reuse counts. Confirm the chosen week matches the supplied reviews.
 - [ ] Follow the README on another person's laptop; record evidence in `m3_validation.md`.
 - [ ] Give the professor the dedicated Windows ZIP link, not terminal commands. Confirm START_REVIEWWISE.bat appears directly in its extracted folder.
@@ -28,8 +29,8 @@ or Moodle submission is claimed. The summary PDF is a draft.
 | Time | What to show |
 |---|---|
 | 0:00–0:20 | Problem, intended user and running local app. |
-| 0:20–0:45 | New multilingual reviews and input preview. |
-| 0:45–1:30 | Start real analysis and show progress. Label any time cut and state actual duration. |
+| 0:20–0:45 | Open a genuine saved weekly report, clearly labelled recorded; show counts and evidence. |
+| 0:45–1:30 | Analyse a small fresh multilingual input live. Label any time cut and state actual duration. |
 | 1:30–2:10 | Counts, original evidence, positives and supported actions. |
 | 2:10–2:30 | Download report; explain AI extraction versus Python counting. |
 | 2:30–3:00 | Architecture, setup/restart, three limitations and actual test status. |

@@ -6,6 +6,7 @@ pushd "%~dp0"
 if errorlevel 1 goto folder_error
 
 if not exist "scripts\manage.py" goto extract_first
+if exist "runtime\python.exe" goto portable_launch
 echo.
 echo ReviewWise - local review analysis
 echo First launch checks your existing Python and Ollama, then prepares the app.
@@ -28,8 +29,16 @@ if errorlevel 1 goto python_install_failed
 call :find_python
 if not defined REVIEWWISE_PYTHON goto python_help
 
+:portable_launch
+echo ReviewWise - ready-to-run Windows edition
+echo Python and app packages are included. No package installation is needed.
+echo Local AI is prepared in the background. Keep this window open.
+"runtime\python.exe" -X utf8 "scripts\manage.py" portable %*
+goto launch_result
+
 :launch
 "%REVIEWWISE_PYTHON%" -X utf8 "scripts\manage.py" %REVIEWWISE_ACTION%
+:launch_result
 set "REVIEWWISE_RESULT=%errorlevel%"
 if "%REVIEWWISE_RESULT%"=="0" goto done
 if "%REVIEWWISE_RESULT%"=="130" goto done

@@ -41,7 +41,7 @@ def render_report(result, reporting_day=None):
         f"Reviews needing attention: {len(result.failures)}",
         f"Reviews pending: {len(result.pending)}",
         "Coverage: complete" if result.complete else "Coverage: PARTIAL — counts cover validated reviews only",
-        f"Model: {MODEL}", f"Model digest: {result.model_digest}",
+        f"Model: {result.model_name}", f"Model digest: {result.model_digest}",
         f"Report preparation time: {result.elapsed_seconds:.2f} seconds",
         f"New AI analyses: {len(result.analyses) - result.reused_reviews}",
         f"Validated analyses reused from this session: {result.reused_reviews}", "",

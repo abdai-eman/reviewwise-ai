@@ -17,6 +17,7 @@ import urllib.error
 import urllib.request
 import venv
 import webbrowser
+from threading import Thread
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -279,12 +280,16 @@ def install_ollama_if_missing():
     return find_ollama()
 
 
-def ensure_model():
+def ensure_model(progress=None):
     """Start/reuse local Ollama; a completed installation needs no downloads."""
+    if progress:
+        progress("starting", "Checking your local AI installation")
     if api_json("/api/version") is None:
         install_ollama_if_missing()
     version = ensure_service()
     if installed_model() is None:
+        if progress:
+            progress("downloading", "Downloading the analysis model for first use; internet is required")
         print(f"Downloading {MODEL} (approximately 1.9 GB; internet required)...", flush=True)
         child_env = os.environ.copy()
         child_env["OLLAMA_HOST"] = "127.0.0.1:11434"
@@ -298,6 +303,40 @@ def ensure_model():
         if installed_model() is None:
             raise SetupError("Ollama did not register the model after download. Restart Ollama and retry the launcher.")
     return version
+
+
+def write_ai_status(state, message):
+    STATE.mkdir(exist_ok=True)
+    path = STATE / 'ai-setup.json'
+    temporary = path.with_suffix('.tmp')
+    temporary.write_text(json.dumps({'state':state, 'message':message, 'pid':os.getpid()}), encoding='utf-8')
+    temporary.replace(path)
+
+
+def ai_setup_status():
+    try:
+        value = json.loads((STATE / 'ai-setup.json').read_text(encoding='utf-8'))
+        if value.get('state') in {'starting','downloading'} and not process_alive(value.get('pid')):
+            return {'state':'error','message':'AI preparation was interrupted. Select Prepare local AI to continue.'}
+        return value
+    except (OSError, ValueError):
+        return {'state':'unknown','message':'AI availability is checked when analysis starts.'}
+
+
+def start_ai_preparation():
+    """Allow the interface and saved reports to open while first-time setup runs."""
+    write_ai_status('starting', 'Preparing local AI in the background')
+
+    def prepare():
+        try:
+            ensure_model(progress=write_ai_status)
+            write_ai_status('ready', 'Local AI is installed and ready for new reviews')
+        except Exception as error:
+            write_ai_status('error', str(error))
+
+    thread = Thread(target=prepare, name='reviewwise-ai-preparation', daemon=True)
+    thread.start()
+    return thread
 
 
 def setup():
@@ -381,20 +420,27 @@ def run_app(command, port):
             pass
 
 
-def launch(headless=False, port=8501):
+def launch(headless=False, port=8501, portable=False):
     existing = existing_app_url()
     if existing:
         print("ReviewWise is already running. Reusing the existing application.", flush=True)
         if not headless:
             webbrowser.open(existing)
         return
-    ensure_dependencies()
-    print("Checking local Ollama and the review-analysis model...", flush=True)
-    ensure_model()
+    if portable:
+        import importlib.util
+        if not all(importlib.util.find_spec(name) for name in ('streamlit', 'ollama', 'pydantic')):
+            raise SetupError('The portable package is incomplete. Extract the entire Windows ZIP again; no Python installation is needed.')
+        interpreter = sys.executable
+    else:
+        ensure_dependencies()
+        interpreter = str(PYTHON)
+    print("Opening the interface while local AI is checked in the background...", flush=True)
+    start_ai_preparation()
     port = available_port(port)
     print("Opening ReviewWise. Keep this window open while using the application.", flush=True)
     run_app(
-        [str(PYTHON), "-m", "streamlit", "run", str(ROOT / "app.py"),
+        [interpreter, "-m", "streamlit", "run", str(ROOT / "app.py"),
          "--server.address=127.0.0.1", f"--server.port={port}",
          "--browser.gatherUsageStats=false", "--server.fileWatcherType=none",
          f"--server.headless={'true' if headless else 'false'}"],
@@ -420,19 +466,20 @@ def doctor():
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=["launch", "setup", "start", "doctor", "smoke"])
+    parser.add_argument("command", choices=["launch", "portable", "setup", "start", "doctor", "smoke"])
     parser.add_argument("--headless", action="store_true", help="Do not open a browser (start only).")
     parser.add_argument("--port", type=int, default=8501, help="Local application port (start only).")
     parser.add_argument("--text", default="The coffee was cold and we waited too long.", help="Real model smoke-test input.")
     args = parser.parse_args()
     check_python()
-    reuse_saved_environment()
+    if args.command != 'portable':
+        reuse_saved_environment()
     if args.command == "setup":
         setup()
     elif args.command == "doctor":
         doctor()
-    elif args.command in ("launch", "start"):
-        launch(headless=args.headless, port=args.port)
+    elif args.command in ("launch", "start", "portable"):
+        launch(headless=args.headless, port=args.port, portable=args.command == 'portable')
     elif args.command == "smoke":
         check_dependencies()
         # The entry point also works when called using the system Python.

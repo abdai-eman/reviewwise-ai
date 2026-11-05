@@ -2,6 +2,7 @@
 
 from pathlib import Path
 from datetime import date
+from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
 
@@ -22,7 +23,33 @@ def button(app, label):
     return next(item for item in app.button if item.label == label)
 
 
+def input_mode(app):
+    return next(item for item in app.radio if item.key == "input_mode")
+
+
 class AppTests(unittest.TestCase):
+    def test_saved_report_opens_without_another_model_call(self):
+        fixture = BatchResult([Analysis(Review(1, 'Cold coffee.'), Extraction(positives=[], complaints=[{'category':'cold_coffee','quote':'Cold coffee.'}]))], .5, 'ui-storage-fixture')
+        with TemporaryDirectory() as directory, patch('reviewwise.storage.reports_directory', return_value=Path(directory)), patch('reviewwise.pipeline.analyze_reviews', return_value=fixture) as analyze:
+            app=open_app()
+            app.text_area[0].input('Cold coffee.').run()
+            button(app,ACTION).click().run()
+            button(app,'Save this report').click().run()
+            next(item for item in app.radio if item.key=='workspace_view').set_value('Saved reports').run()
+            button(app,'Open saved report').click().run()
+            self.assertEqual(len(app.exception),0)
+            self.assertEqual(len(app.dataframe),1)
+            self.assertTrue(any('saved analysis' in item.value for item in app.caption))
+            analyze.assert_called_once()
+
+    def test_workspace_draft_survives_saved_report_navigation(self):
+        app=open_app()
+        app.text_area[0].input('Le café était froid.').run()
+        app.date_input[0].set_value(date(2026,11,12)).run()
+        next(item for item in app.radio if item.key=='workspace_view').set_value('Saved reports').run()
+        next(item for item in app.radio if item.key=='workspace_view').set_value('Analyse reviews').run()
+        self.assertEqual(app.text_area[0].value,'Le café était froid.')
+        self.assertEqual(app.date_input[0].value,date(2026,11,12))
     def test_initial_page_and_example_do_not_call_ai(self):
         with patch("reviewwise.pipeline.analyze_reviews") as analyze:
             app = open_app()
@@ -62,8 +89,8 @@ class AppTests(unittest.TestCase):
     def test_pasted_draft_survives_switching_input_modes(self):
         app = open_app()
         app.text_area[0].input("Le café était froid.").run()
-        app.radio[0].set_value("Upload CSV").run()
-        app.radio[0].set_value("Paste reviews").run()
+        input_mode(app).set_value("Upload CSV").run()
+        input_mode(app).set_value("Paste reviews").run()
         self.assertEqual(app.text_area[0].value, "Le café était froid.")
         self.assertFalse(button(app, ACTION).disabled)
 
@@ -71,10 +98,10 @@ class AppTests(unittest.TestCase):
         app = open_app()
         app.session_state.saved_csv = b"review\nCold coffee.\nFriendly staff.\n"
         app.session_state.saved_csv_name = "my-reviews.csv"
-        app.radio[0].set_value("Upload CSV").run()
+        input_mode(app).set_value("Upload CSV").run()
         self.assertFalse(button(app, ACTION).disabled)
-        app.radio[0].set_value("Paste reviews").run()
-        app.radio[0].set_value("Upload CSV").run()
+        input_mode(app).set_value("Paste reviews").run()
+        input_mode(app).set_value("Upload CSV").run()
         self.assertEqual(app.session_state.saved_csv_name, "my-reviews.csv")
         self.assertEqual(app.session_state.saved_csv, b"review\nCold coffee.\nFriendly staff.\n")
 
@@ -86,9 +113,9 @@ class AppTests(unittest.TestCase):
             app = open_app()
             app.text_area[0].input("Cold coffee.").run()
             button(app, ACTION).click().run()
-            app.radio[0].set_value("Upload CSV").run()
+            input_mode(app).set_value("Upload CSV").run()
             self.assertNotIn("result", app.session_state)
-            app.radio[0].set_value("Paste reviews").run()
+            input_mode(app).set_value("Paste reviews").run()
             self.assertIn("result", app.session_state)
             analyze.assert_called_once()
 
@@ -134,7 +161,7 @@ class AppTests(unittest.TestCase):
             app = open_app()
             app.session_state.saved_csv = ("review\n" + "\n".join(f"Cold coffee {i}." for i in range(1, 81))).encode("utf-8")
             app.session_state.saved_csv_name = "weekly-reviews.csv"
-            app.radio[0].set_value("Upload CSV").run()
+            input_mode(app).set_value("Upload CSV").run()
             self.assertEqual(len(app.exception), 0)
             self.assertFalse(button(app, ACTION).disabled)
             self.assertTrue(any(item.value == "80 reviews ready to analyse." for item in app.caption))

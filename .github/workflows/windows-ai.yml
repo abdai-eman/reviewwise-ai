@@ -6,6 +6,14 @@ on:
     paths:
       - .github/workflows/windows-ai.yml
       - scripts/verify_windows_ai.py
+      - scripts/build_windows.py
+      - scripts/manage.py
+      - START_REVIEWWISE.bat
+      - app.py
+      - reviewwise/**
+      - assets/**
+      - .streamlit/config.toml
+      - tests/**
   workflow_dispatch:
 
 permissions:
@@ -86,6 +94,19 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           .\.venv\Scripts\python.exe scripts/verify_windows_ai.py 2>&1 | Tee-Object "$env:RUNNER_TEMP/ai.txt"
           exit $LASTEXITCODE
+      - name: Build and exercise the ready-to-run Windows package
+        id: package
+        shell: pwsh
+        run: |
+          .\.venv\Scripts\python.exe scripts/build_windows.py 2>&1 | Tee-Object "$env:RUNNER_TEMP/package.txt"
+          exit $LASTEXITCODE
+      - name: Retain the Windows classroom package
+        if: steps.package.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ReviewWise-M3-Windows
+          path: download/ReviewWise-M3-Windows.zip
+          compression-level: 0
       - name: Preserve verification evidence on the feature branch
         if: always()
         shell: pwsh
@@ -95,9 +116,9 @@ jobs:
           if (Test-Path docs/verification/windows-ai.json) {
             $evidence = Get-Content docs/verification/windows-ai.json -Raw | ConvertFrom-Json -AsHashtable
             $evidence['ci_job_status'] = '${{ job.status }}'
-            $evidence['stages'] = @{dependencies='${{ steps.dependencies.outcome }}'; tests='${{ steps.tests.outcome }}'; runtime='${{ steps.runtime.outcome }}'; ai='${{ steps.ai.outcome }}'}
+            $evidence['stages'] = @{dependencies='${{ steps.dependencies.outcome }}'; tests='${{ steps.tests.outcome }}'; runtime='${{ steps.runtime.outcome }}'; ai='${{ steps.ai.outcome }}'; package='${{ steps.package.outcome }}'}
             $diagnostics = @{}
-            foreach ($name in @('dependencies','tests','ai','model')) {
+            foreach ($name in @('dependencies','tests','ai','model','package')) {
               $log = Join-Path $env:RUNNER_TEMP "$name.txt"
               if (Test-Path $log) { $diagnostics[$name] = (Get-Content $log -Tail 30) -join "`n" }
             }
@@ -106,6 +127,7 @@ jobs:
             git config user.name 'github-actions[bot]'
             git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
             git add docs/verification
+            if ('${{ steps.package.outcome }}' -eq 'success') { git add download/ReviewWise-M3-Windows.zip }
             git diff --cached --quiet
             if ($LASTEXITCODE -eq 1) {
               git commit -m 'Record native Windows AI verification [skip ci]'

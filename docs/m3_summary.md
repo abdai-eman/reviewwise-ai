@@ -2,60 +2,58 @@
 
 **Team:** MAKNI Abdourrahmane · HAFT Benjamin · ABDAI Eman
 
-**Deadline:** 16 November 2026, 23:59.
+**Repository:** https://github.com/abdai-eman/reviewwise-ai/tree/m3-mvp
 
-**Repository:** https://github.com/abdai-eman/reviewwise-ai
+**Deadline:** 16 November 2026, 23:59. **Video / submission tag:** pending.
 
-**M3 tagged commit and unlisted video:** pending — not created or published.
+**Problem and user.** Independent café owners in Luxembourg need to interpret
+multilingual guest feedback and choose practical improvements. ReviewWise turns
+supplied reviews into inspectable complaint groups, evidence and next steps.
 
-**Problem and users.** Independent café owners in Luxembourg receive multilingual
-feedback and need to decide what to improve. ReviewWise aims to turn supplied
-reviews into inspectable complaints and practical actions.
+**Product and AI.** Paste reviews or upload a UTF-8 CSV, select a week and run
+local Ollama `qwen2.5:3b`. AI selects categories and numbered original passages;
+Python validates the IDs/quotations and counts distinct reviews per category.
+Up to 1,000 reviews are tracked, with explicit validated/failed/pending coverage,
+live partial results, stopping and up to three deterministic suggestions. Save
+and reopen a genuine report without rerunning AI; recorded reports are labelled.
+Dates are supplied by the user, not automatically filtered. No cloud AI, API key,
+database or Docker is required. Architecture: `docs/architecture.svg`.
 
-**Product.** A local Streamlit page accepts pasted reviews or a UTF-8 CSV. Ollama
-with `qwen2.5:3b` extracts feedback and original-language evidence. Python checks
-JSON, review/category/evidence IDs and quotations, counts distinct review IDs per complaint, and
-creates a downloadable weekly report with up to three supported actions.
-Current source groups up to four short reviews, shows live partial results,
-lists validation failures and supports stopping. Real-model verification of
-this correction is pending; the Windows ZIP still contains the earlier version.
-Up to 1,000 reviews are accepted. The Monday–Sunday week is selected by the
-user; input dates are not verified or filtered. All accepted reviews are counted.
-No database, cloud AI, API key or Docker is required. See `docs/architecture.svg`.
+**Installation.** Windows package: download, Extract All, double-click
+`START_REVIEWWISE.bat`. The ready-to-run build includes Python 3.12.10 and pinned
+packages; native packaging checks are recorded in `docs/verification/windows-package.json`
+when successful. Ollama is reused or installed through WinGet; a missing model
+is downloaded in the background while saved reports remain available. Without
+WinGet, manually installing Ollama adds one step: four total. Internet is needed
+for initial downloads, including about 1.9 GB for the model. Windows 11 x64 is
+the classroom target; CI uses Windows Server 2022. Human laptop validation is
+pending. 16 GB RAM is a planning recommendation, not a verified minimum.
 
-**Installation.** On Windows 11 with App Installer/WinGet: download the M3 ZIP,
-extract it, double-click `START_REVIEWWISE.bat`. First launch installs missing
-Python/Ollama only when missing, reuses Python 3.11-3.15, creates `.venv`, installs hash-checked
-packages, downloads the model and opens the app. Later starts use the same file.
-It asks before installing another Python. Without WinGet, installing missing prerequisites adds up to two steps: five
-steps total. The model is about 1.9 GB (unverified estimate); 16 GB RAM is a
-planning recommendation, not a measured minimum.
+**Measured evidence.** Native Windows CI executed real Ollama 0.40.14 and Qwen:
+one two-complaint input took 9.97 s; the preserved fictional multilingual sample
+produced 10 validated reviews in 41.25 s over seven requests; its matching repeat
+took 0.21 s with no new model calls. This is not a customer-data accuracy study
+or an 8 GB laptop speed claim. The run misses some positive feedback. Offline
+logic/UI tests use explicit fixtures and are reported separately in
+`docs/m3_validation.md`. M2 experiments, CSV files and evidence are unchanged.
 
-**Evidence and status.** 67 offline tests pass on Python 3.12,
-including 80-review handling, live partial coverage, session reuse, failure recovery and date labels.
-Earlier launcher checks covered Python 3.11-3.15; the latest detailed results
-are in `docs/m3_validation.md`. Package install
-and native Ollama 0.40.14 startup work. Cloud policy blocks the model registry,
-so no real M3 inference or accuracy improvement is claimed. M2 evidence is
-unchanged. Windows setup, a real-input run, another person's laptop test,
-offline operation and the video remain pending.
+**Known limitations.** AI can miss or misclassify feedback, especially in
+Luxembourgish. CPU inference and memory pressure can make new weekly files slow.
+Six café categories plus “other” are limited. Review dates/authenticity are not
+verified. The extraction cache is session-only; saved report files persist only
+when explicitly saved. Quotes support traceability, not semantic truth.
 
-**Known limitations.** AI may miss or misclassify multilingual feedback,
-especially Luxembourgish; Python counts cannot correct incorrect extraction.
-Six café categories are limited and “other” combines different topics. CPU
-inference may be slow for a new weekly file. Validated analyses are reused in
-the current session; closing or restarting the app can lose them. Quotes establish
-traceability, not semantic truth. M3 performance/user benefit remain unmeasured.
-
-**Cost and privacy.** 80 short new reviews can use 20 group calls, or up to 160
-with long inputs/fallback × €0 metered API fee = €0 metered API fees. Hardware/electricity remain
-unmeasured. Reviews go only to local Ollama; no automatic report files are saved.
-Remove unnecessary personal information and use permitted data.
+**Cost/privacy.** Local inference has no metered API fee; hardware, electricity
+and actual user benefit are unmeasured. Remove personal details and use permitted
+input. Saved reports contain original reviews and remain locally until exported
+or deleted. Imported provenance is not independently authenticated.
 
 **Who did what since M2.** Actual member contributions require team confirmation.
-Codex assisted with M3 code, tests and documentation; that does not establish an
+Codex assisted with M3 code, tests and documentation; this establishes no
 individual student's contribution or technical understanding.
 
-**Before submission.** Complete the real-input and other-laptop tests, record an
-unlisted three-minute video, replace pending links/contributions, review this
-draft, export the final one-page PDF and tag the agreed M3 commit.
+**Before submission.** Test the packaged setup on another person's laptop,
+measure the full 80-review workflow and assess new permitted input/languages.
+Record the three-minute unlisted video, fill actual contributions and links,
+review/export this one-page draft, and tag the agreed M3 commit. No video,
+human laptop test or Moodle submission is claimed.

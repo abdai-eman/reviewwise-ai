@@ -75,6 +75,7 @@ class BatchResult:
     running: bool = False
     stop_reason: str = ""
     ai_requests: int = 0
+    model_name: str = MODEL
 
     @property
     def total_reviews(self):

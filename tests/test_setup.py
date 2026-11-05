@@ -130,6 +130,16 @@ class SetupTests(unittest.TestCase):
 
 
 class AutomaticLaunchTests(unittest.TestCase):
+    def test_portable_start_uses_bundled_python_without_pip_or_venv(self):
+        with patch.object(manage, 'existing_app_url', return_value=None), \
+             patch.object(manage, 'ensure_dependencies') as install, \
+             patch.object(manage, 'start_ai_preparation'), \
+             patch.object(manage, 'available_port', return_value=8501), \
+             patch.object(manage, 'run_app') as start:
+            manage.launch(headless=True, portable=True)
+            install.assert_not_called()
+            self.assertEqual(start.call_args.args[0][0], manage.sys.executable)
+
     def test_warm_start_does_not_reinstall_python_packages(self):
         with patch.object(manage, "check_dependencies"), \
              patch.object(manage.venv, "create") as create, \
@@ -228,26 +238,33 @@ class AutomaticLaunchTests(unittest.TestCase):
             with self.assertRaisesRegex(manage.SetupError, "did not register the model"):
                 manage.ensure_model()
 
-    def test_launcher_prepares_dependencies_and_model_before_opening_app(self):
+    def test_launcher_opens_app_without_waiting_for_the_model_download(self):
         order = []
         with patch.object(manage, "ensure_dependencies", side_effect=lambda: order.append("dependencies")), \
-             patch.object(manage, "ensure_model", side_effect=lambda: order.append("model")), \
+             patch.object(manage, "start_ai_preparation", side_effect=lambda: order.append("background model setup")), \
              patch.object(manage, "existing_app_url", return_value=None), \
              patch.object(manage, "available_port", return_value=8502), \
              patch.object(manage, "run_app", side_effect=lambda *args: order.append("app")) as run:
             manage.launch()
-            self.assertEqual(order, ["dependencies", "model", "app"])
+            self.assertEqual(order, ["dependencies", "background model setup", "app"])
             self.assertIn("--server.headless=false", run.call_args.args[0])
             self.assertIn("--server.port=8502", run.call_args.args[0])
 
-    def test_failed_model_preparation_does_not_launch_app(self):
-        with patch.object(manage, "ensure_dependencies"), \
-             patch.object(manage, "existing_app_url", return_value=None), \
-             patch.object(manage, "ensure_model", side_effect=manage.SetupError("download blocked")), \
-             patch.object(manage, "run") as run:
-            with self.assertRaisesRegex(manage.SetupError, "download blocked"):
-                manage.launch()
-            run.assert_not_called()
+    def test_background_model_failure_is_reported_without_blocking_saved_reports(self):
+        with TemporaryDirectory() as directory, patch.object(manage, 'STATE', Path(directory)), \
+             patch.object(manage, 'ensure_model', side_effect=manage.SetupError('download blocked')):
+            worker = manage.start_ai_preparation()
+            worker.join(timeout=2)
+            self.assertFalse(worker.is_alive())
+            self.assertEqual(manage.ai_setup_status()['state'], 'error')
+            self.assertIn('download blocked', manage.ai_setup_status()['message'])
+
+    def test_interrupted_model_preparation_has_a_recovery_message(self):
+        with TemporaryDirectory() as directory, patch.object(manage, 'STATE', Path(directory)):
+            manage.write_ai_status('downloading', 'Model download')
+            with patch.object(manage, 'process_alive', return_value=False):
+                self.assertEqual(manage.ai_setup_status()['state'], 'error')
+                self.assertIn('interrupted', manage.ai_setup_status()['message'])
 
     def test_repeated_launch_reuses_existing_app_without_dependencies_model_or_process_start(self):
         with patch.object(manage, 'existing_app_url', return_value='http://127.0.0.1:8501'), \
