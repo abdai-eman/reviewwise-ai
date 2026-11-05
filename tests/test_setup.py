@@ -10,6 +10,29 @@ from scripts import manage
 
 
 class SetupTests(unittest.TestCase):
+    def test_incomplete_new_environment_does_not_hide_a_completed_previous_installation(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            old = root / 'reviewwise-ai-m3-mvp (1)' / 'reviewwise-ai-m3-mvp'
+            current = root / 'reviewwise-ai-m3-mvp (2)' / 'reviewwise-ai-m3-mvp'
+            ready = old / '.venv'
+            partial = current / '.venv'
+            for folder in (ready, partial):
+                (folder / 'Scripts').mkdir(parents=True)
+                (folder / 'Scripts/python.exe').write_text('fixture interpreter')
+            lock = b'pinned packages\n'
+            digest = manage.hashlib.sha256(lock).hexdigest()
+            (old / 'requirements.txt').write_bytes(lock)
+            (current / 'requirements.txt').write_bytes(lock)
+            (ready / '.reviewwise-requirements.sha256').write_text(digest)
+            with patch.multiple(manage, ROOT=current, VENV=partial, PYTHON=partial / 'Scripts/python.exe', MARKER=partial / '.reviewwise-requirements.sha256'), \
+                 patch.object(manage, 'environment_record', return_value=root / 'missing-record.json'), \
+                 patch.object(manage.subprocess, 'run'):
+                manage.reuse_saved_environment()
+                self.assertEqual(manage.VENV, ready)
+                self.assertEqual(manage.PYTHON, ready / 'Scripts/python.exe')
+                self.assertTrue((partial / 'Scripts/python.exe').exists())
+
     def test_previous_zip_installation_is_found_without_copying_its_venv_or_csv(self):
         with TemporaryDirectory() as directory:
             root = Path(directory)

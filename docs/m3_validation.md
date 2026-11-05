@@ -220,8 +220,9 @@ compatibility. Migration also checks nearby ReviewWise folders with identical
 lock files. Missing, deleted, corrupt or incompatible records fall back to normal
 setup. No environment or CSV is moved, copied or deleted by this migration.
 
-**70 offline tests pass** on Python 3.12, including matching/mismatched and missing
+**71 offline tests pass** on Python 3.12, including matching/mismatched and missing
 environment records and migration from nested ZIP folders while preserving CSV
-bytes. The installed pip supports the progress/log options. Native Windows timing
+bytes. An incomplete environment in a fresh extraction no longer hides an older
+completed matching installation. The installed pip supports the progress/log options. Native Windows timing
 and the user's currently running quiet installer remain unverified. Source edits
 do not change a process that has already loaded the older installer.

@@ -182,9 +182,14 @@ def find_previous_environment(root, digest):
 def reuse_saved_environment():
     global VENV, PYTHON, MARKER
     record = environment_record()
-    if record is None or PYTHON.is_file():
+    if record is None:
         return
     digest = requirements_digest()
+    try:
+        if PYTHON.is_file() and MARKER.read_text() == digest:
+            return
+    except (OSError, ValueError):
+        pass
     folder = find_saved_environment(record, digest) or find_previous_environment(ROOT, digest)
     if folder:
         VENV = folder

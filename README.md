@@ -7,7 +7,7 @@ See [validation evidence](docs/m3_validation.md). M3 is not yet complete or subm
 
 **5 November runtime correction — awaiting real-model verification:** current
 source adds live partial results, cancellation, duplicate-run protection and
-compact evidence IDs. **70 offline tests and fixture browser checks pass.**
+compact evidence IDs. **71 offline tests and fixture browser checks pass.**
 This is not an AI speed or accuracy result. The Windows ZIP still contains the
 previous `3569de5` package; it will be refreshed only after a real Qwen check.
 
