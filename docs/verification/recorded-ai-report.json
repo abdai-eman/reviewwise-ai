@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "recorded_at": "2026-11-05T12:26:41.009604+00:00",
+  "recorded_at": "2026-11-05T12:34:25.886610+00:00",
   "reporting_day": "2026-11-05",
   "title": "Recorded AI example — fictional multilingual café reviews",
   "provenance": "Real Ollama execution in Windows CI on fictional M2 input; dates are demonstration metadata.",
@@ -160,7 +160,7 @@
         }
       }
     ],
-    "elapsed_seconds": 32.941561699999994,
+    "elapsed_seconds": 32.905552599999965,
     "model_digest": "357c53fb659c5076de1d65ccb0b397446227b71a42be9d1603d46168015c9e4b",
     "reused_reviews": 0,
     "failures": [],
@@ -170,6 +170,6 @@
     "ai_requests": 7,
     "model_name": "qwen2.5:3b"
   },
-  "source_commit": "4af28b3b5139001dc38be85e743839322b2e26a1",
-  "workflow_run": "42026972819"
+  "source_commit": "5a7f1e9d5cfa6925dd320e30e6f430293bcb8fc6",
+  "workflow_run": "42028084015"
 }
