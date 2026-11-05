@@ -7,7 +7,7 @@ Reviews pending: 0
 Coverage: complete
 Model: qwen2.5:3b
 Model digest: 357c53fb659c5076de1d65ccb0b397446227b71a42be9d1603d46168015c9e4b
-Report preparation time: 41.38 seconds
+Report preparation time: 32.94 seconds
 New AI analyses: 10
 Validated analyses reused from this session: 0
 
@@ -19,7 +19,6 @@ COMPLAINTS (counted by Python)
 - Dirty tables: 1 review(s); reviews 5
 - High prices: 1 review(s); reviews 7
 - Incorrect order: 1 review(s); reviews 3
-- Unfriendly staff: 1 review(s); reviews 9
 
 PRACTICAL ACTIONS (templates based on extracted complaints)
 1. Review the ordering and serving process to reduce waiting times. Based on slow service in reviews 1, 6, 8.
@@ -29,7 +28,8 @@ PRACTICAL ACTIONS (templates based on extracted complaints)
 REVIEW EVIDENCE
 
 Review 1: The coffee was excellent, but the service was very slow.
-  Slow service: the service was very slow.
+  Positive feedback: The coffee was excellent,
+  Slow service: The coffee was excellent,
 
 Review 2: Great atmosphere and friendly staff!
   Positive feedback: Great atmosphere and friendly staff!
@@ -57,7 +57,6 @@ Review 8: De Service war ganz lues an ech hu laang op mäi Kaffi gewaart.
 
 Review 9: D'Iesse war ganz gutt, mee d'Personal war net frëndlech.
   Positive feedback: D'Iesse war ganz gutt,
-  Unfriendly staff: d'Personal war net frëndlech.
 
 Review 10: De Kaffi war kal an d'Präisser waren ze héich.
   Cold coffee: De Kaffi war kal an d'Präisser waren ze héich.
