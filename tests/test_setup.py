@@ -142,7 +142,7 @@ class AutomaticLaunchTests(unittest.TestCase):
 
     def test_warm_start_does_not_reinstall_python_packages(self):
         with patch.object(manage, "check_dependencies"), \
-             patch.object(manage.venv, "create") as create, \
+             patch("venv.create") as create, \
              patch.object(manage, "run") as run:
             manage.ensure_dependencies()
             create.assert_not_called()
@@ -151,7 +151,7 @@ class AutomaticLaunchTests(unittest.TestCase):
     def test_missing_environment_is_created_with_verified_binary_packages(self):
         with patch.object(manage, "check_dependencies", side_effect=manage.SetupError("missing")), \
              patch.object(manage.Path, "is_file", return_value=False), \
-             patch.object(manage.venv, "create") as create, \
+             patch("venv.create") as create, \
              patch.object(manage, "run") as run, \
              patch.object(manage, "MARKER") as marker, \
              patch.object(manage, "requirements_digest", return_value="lock-hash"):

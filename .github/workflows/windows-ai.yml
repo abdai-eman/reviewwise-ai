@@ -21,7 +21,7 @@ permissions:
 
 concurrency:
   group: reviewwise-windows-ai
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   real-windows-check:

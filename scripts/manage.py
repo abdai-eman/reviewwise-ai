@@ -15,7 +15,6 @@ import sys
 import time
 import urllib.error
 import urllib.request
-import venv
 import webbrowser
 from threading import Thread
 
@@ -221,6 +220,8 @@ def check_dependencies(verify_imports=True):
 
 def ensure_dependencies(force=False):
     """Install only on first launch, after requirements change, or to repair imports."""
+    # Embedded Python intentionally omits venv; only the source installer needs it.
+    import venv
     check_python()
     if not force:
         try:

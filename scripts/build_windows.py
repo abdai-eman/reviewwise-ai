@@ -107,6 +107,28 @@ def main():
         'laptop_test': 'Not performed by CI; must be completed on another person’s laptop.',
     }
     (staging / 'build-info.json').write_text(json.dumps(manifest, indent=2), encoding='utf-8')
+    (verification / 'windows-package.json').write_text(json.dumps(manifest, indent=2), encoding='utf-8')
+    # The installed edition has a short entry document; source development stays in GitHub.
+    (staging / 'README.md').write_text(
+        '# ReviewWise — Windows classroom edition\n\n'
+        '1. Download the Windows ZIP.\n'
+        '2. Right-click it → Extract All, then open the extracted folder.\n'
+        '3. Double-click **START_REVIEWWISE.bat** and keep its window open.\n\n'
+        'Python and the exact app packages are included. No terminal commands or pip installation are needed. '
+        'Existing Ollama and qwen2.5:3b are reused. Missing Ollama/model files are prepared in the background; '
+        'initial downloads need internet and may take several minutes (model approximately 1.9 GB). '
+        'If WinGet is unavailable, install Ollama from https://ollama.com/download/windows first: four setup steps total.\n\n'
+        'For a presentation, open **Saved reports → Explore a recorded AI example**. '
+        'It is a genuine recorded result, clearly labelled; it does not run new inference. '
+        'Use **Analyse reviews** for new input and **Save this report** to keep your own results. '
+        'A new 80-review analysis can still take minutes on a laptop.\n\n'
+        'Next time, double-click the same launcher. To stop, press Ctrl+C in its window. '
+        'Quit Ollama from the Windows tray or use Release AI memory when finished.\n\n'
+        'Windows x64; Windows Server 2022 CI verified. Another person’s laptop test is still required. '
+        '8 GB RAM can be limiting; 16 GB is a recommendation, not a verified minimum. '
+        'Remove personal details from input. Saved reports are stored only when explicitly saved.\n\n'
+        'Package checks: build-info.json. Architecture: docs/architecture.svg. '
+        'Full source and documentation: https://github.com/abdai-eman/reviewwise-ai/tree/m3-mvp\n', encoding='utf-8')
     output = ROOT / 'download/ReviewWise-M3-Windows.zip'
     output.parent.mkdir(exist_ok=True)
     with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as package:
