@@ -21,8 +21,8 @@ database or Docker is required. Architecture: `docs/architecture.svg`.
 
 **Installation.** Windows package: download, Extract All, double-click
 `START_REVIEWWISE.bat`. The ready-to-run build includes Python 3.12.10 and pinned
-packages; native packaging checks are recorded in `docs/verification/windows-package.json`
-when successful. Ollama is reused or installed through WinGet; a missing model
+packages; publisher, native UI and launcher checks passed. Package identity and
+checksum are in `docs/verification/windows-package.json`. Ollama is reused or installed through WinGet; a missing model
 is downloaded in the background while saved reports remain available. Without
 WinGet, manually installing Ollama adds one step: four total. Internet is needed
 for initial downloads, including about 1.9 GB for the model. Windows 11 x64 is
@@ -33,8 +33,8 @@ pending. 16 GB RAM is a planning recommendation, not a verified minimum.
 one two-complaint input took 9.97 s; the preserved fictional multilingual sample
 produced 10 validated reviews in 41.25 s over seven requests; its matching repeat
 took 0.21 s with no new model calls. This is not a customer-data accuracy study
-or an 8 GB laptop speed claim. The run misses some positive feedback. Offline
-logic/UI tests use explicit fixtures and are reported separately in
+or an 8 GB laptop speed claim. The run misses some positive feedback. 79 offline
+checks pass separately from the real UI/AI integration check, as recorded in
 `docs/m3_validation.md`. M2 experiments, CSV files and evidence are unchanged.
 
 **Known limitations.** AI can miss or misclassify feedback, especially in

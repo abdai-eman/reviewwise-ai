@@ -7,7 +7,7 @@ Development is on **[m3-mvp](https://github.com/abdai-eman/reviewwise-ai/tree/m3
 
 ## Run on Windows — three steps
 
-1. **Download [ReviewWise-M3-Windows.zip](https://github.com/abdai-eman/reviewwise-ai/raw/refs/heads/m3-mvp/download/ReviewWise-M3-Windows.zip).** Use this Windows package, not GitHub's generic source ZIP. The ready-to-run build includes Python 3.12.10 and the exact app dependencies. Check [package verification](docs/verification/windows-package.json) for the packaged source commit and native Windows checks; until that file is present, the older package remains available and requires installed Python.
+1. **Download the 90 MiB [ReviewWise-M3-Windows.zip](https://github.com/abdai-eman/reviewwise-ai/raw/refs/heads/m3-mvp/download/ReviewWise-M3-Windows.zip).** Use this Windows package, not GitHub's generic source ZIP. The ready-to-run build includes Python 3.12.10 and the exact app dependencies. See [package verification](docs/verification/windows-package.json) for the packaged source commit, checksum, size and native Windows checks.
 2. **Right-click the ZIP → Extract All.** Open the extracted folder. `START_REVIEWWISE.bat` must be directly inside it. Extract the entire archive into a writable location such as Desktop; do not run a file from the archive preview.
 3. **Double-click `START_REVIEWWISE.bat`.** Keep its window open. The app opens in your browser. Use **Analyse reviews** for new input or **Saved reports → Explore a recorded AI example** to inspect a clearly labelled, genuine recorded result immediately.
 
@@ -93,6 +93,8 @@ used actual Ollama 0.40.14 and Qwen 3B, without response fixtures:
 - One new review with two complaints: **9.97 seconds**, both expected categories.
 - Preserved fictional multilingual M2 sample: **10 validated reviews, 7 requests, 41.25 seconds**.
 - Identical repeat: **0 new model calls, 0.21 seconds**.
+
+The [complete Windows check](https://github.com/abdai-eman/reviewwise-ai/actions/runs/42028444818) also passed 79 offline tests, fresh input through the actual UI/AI worker, bundled UI rendering and the real Windows launcher. Its already-tested artifact was [published separately](https://github.com/abdai-eman/reviewwise-ai/actions/runs/42030511585) after a concurrent evidence update blocked the first delivery. No new inference was claimed by that delivery job.
 
 These are CI measurements, **not your 8 GB laptop's performance**, customer-data
 evaluation or proof of accurate extraction. The sample misses some positive

@@ -21,6 +21,9 @@ not customer reviews or an accuracy benchmark.
 | Unchanged multilingual M2 input | 10 validated reviews, 7 model requests, 41.25 s |
 | Identical repeat with matching session cache | 10 reused, 0 additional model requests, 0.21 s |
 | Recorded report | Actual result saved with source commit, model identity, timestamp and fictional-data provenance |
+| Fresh input through the real UI (model already warm) | 1 actual model request, complete two-complaint report displayed, 3.12 s |
+| Bundled Windows batch launcher | Health endpoint ready in 1.61 s on CI; UI/report rendered separately; not a laptop timing claim |
+| Published package | 94,388,738 bytes (90 MiB); SHA-256 and source recorded in windows-package.json |
 | Another person's laptop | Not yet performed |
 | Full 80 new reviews on the user's 8 GB laptop | Not measured |
 | Real permitted customer input / human language assessment | Outstanding |
@@ -37,12 +40,29 @@ pulls the model and performs inference within one PowerShell step.
 
 ## Interface, recovery and packaging checks
 
+**79 local offline checks pass** on Python 3.12. The native Windows run
+[42028444818](https://github.com/abdai-eman/reviewwise-ai/actions/runs/42028444818)
+also passed all 79 checks, new input through the actual UI button/background worker
+and real Ollama to the displayed report, and the complete embedded-runtime package
+checks. Its publication step failed after a concurrent generated-evidence update.
+[Recovery run 42030511585](https://github.com/abdai-eman/reviewwise-ai/actions/runs/42030511585)
+downloaded that same successful artifact, verified its application files against
+the branch, and published it without rebuilding or making new AI calls.
+
 The latest local suite covers original source quotations, malformed/missing or
 duplicate evidence IDs, bounded fallback, partial coverage, the review-12 failure,
 stream cancellation, duplicate jobs/tabs, session cache isolation, deterministic
 counting, week labels, navigation, explicit saved report round-trips and import
 validation. UI fixture tests are deliberately separate from real AI verification.
 The native workflow reruns this suite against its own source commit.
+
+Desktop/mobile Chromium checks passed with no external requests or JavaScript
+errors. The actual recorded Windows AI report loaded and exported successfully;
+input survived navigation. A separate, visibly labelled SDK fixture confirmed
+live results before completion, 79 validated results retained after review 12
+failed, all 80 original inputs included in partial export, stopping, duplicate-tab
+blocking and automatic reenabling. This fixture does not establish model latency
+or accuracy.
 
 The browser checks load the actual recorded Windows AI result. They check the
 redesigned desktop/mobile interface, report chart/export, saved-result labelling,
@@ -55,8 +75,10 @@ hash-verified binary packages. Its build verifies native imports, renders the
 bundled UI and its genuine recorded report, and starts the actual bundled launch
 path for a loopback health request. [Build evidence](verification/windows-package.json)
 records source commit, artifact SHA-256, size and measured runner startup time.
-Until this file exists with a successful package stage in `windows-ai.json`,
-the ready-to-run package is not verified or available. CI execution is not proof
+The published artifact is the successfully tested build from source commit
+`32d6c326c6c24a2cc319e4f00d6674edf2a30c80`. Source identity is checked before
+publication. Its checksum/size are in the package record; the original run
+is linked above. CI execution is not proof
 of a successful Windows File Explorer double-click or WinGet install on a laptop.
 
 Earlier managed Linux setup installed the hash-locked dependencies and verified
