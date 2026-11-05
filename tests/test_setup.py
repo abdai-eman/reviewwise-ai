@@ -1,6 +1,9 @@
 """Exercise prerequisite and service failures without modifying a user's machine."""
 
 import unittest
+import json
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from unittest.mock import Mock, patch
 
 from scripts import manage
@@ -159,8 +162,9 @@ class AutomaticLaunchTests(unittest.TestCase):
         order = []
         with patch.object(manage, "ensure_dependencies", side_effect=lambda: order.append("dependencies")), \
              patch.object(manage, "ensure_model", side_effect=lambda: order.append("model")), \
+             patch.object(manage, "existing_app_url", return_value=None), \
              patch.object(manage, "available_port", return_value=8502), \
-             patch.object(manage, "run", side_effect=lambda *args: order.append("app")) as run:
+             patch.object(manage, "run_app", side_effect=lambda *args: order.append("app")) as run:
             manage.launch()
             self.assertEqual(order, ["dependencies", "model", "app"])
             self.assertIn("--server.headless=false", run.call_args.args[0])
@@ -168,11 +172,53 @@ class AutomaticLaunchTests(unittest.TestCase):
 
     def test_failed_model_preparation_does_not_launch_app(self):
         with patch.object(manage, "ensure_dependencies"), \
+             patch.object(manage, "existing_app_url", return_value=None), \
              patch.object(manage, "ensure_model", side_effect=manage.SetupError("download blocked")), \
              patch.object(manage, "run") as run:
             with self.assertRaisesRegex(manage.SetupError, "download blocked"):
                 manage.launch()
             run.assert_not_called()
+
+    def test_repeated_launch_reuses_existing_app_without_dependencies_model_or_process_start(self):
+        with patch.object(manage, 'existing_app_url', return_value='http://127.0.0.1:8501'), \
+             patch.object(manage, 'ensure_dependencies') as dependencies, \
+             patch.object(manage, 'ensure_model') as model, \
+             patch.object(manage, 'run_app') as spawn, \
+             patch.object(manage.webbrowser, 'open') as browser:
+            manage.launch()
+            dependencies.assert_not_called()
+            model.assert_not_called()
+            spawn.assert_not_called()
+            browser.assert_called_once_with('http://127.0.0.1:8501')
+
+    def test_stale_or_other_project_metadata_is_not_reused(self):
+        with TemporaryDirectory() as directory, patch.object(manage, 'STATE', Path(directory)), patch.object(manage, 'process_alive', return_value=False):
+            path = Path(directory) / 'app.json'
+            for state in [{'root': str(manage.ROOT.resolve()), 'pid': 123, 'port': 8501},
+                          {'root': '/another-project', 'pid': 123, 'port': 8501}]:
+                path.write_text(json.dumps(state))
+                self.assertIsNone(manage.existing_app_url())
+            path.write_text('invalid JSON')
+            self.assertIsNone(manage.existing_app_url())
+
+    def test_interrupted_launcher_terminates_only_its_child_and_clears_metadata(self):
+        child = Mock(pid=123)
+        child.wait.side_effect = KeyboardInterrupt
+        child.poll.return_value = None
+        with TemporaryDirectory() as directory, patch.object(manage, 'STATE', Path(directory)), patch.object(manage.subprocess, 'Popen', return_value=child):
+            with self.assertRaises(KeyboardInterrupt):
+                manage.run_app(['fixture-streamlit'], 8501)
+            child.terminate.assert_called_once()
+            self.assertFalse((Path(directory) / 'app.json').exists())
+
+    def test_real_model_smoke_does_not_claim_success_for_an_incomplete_result(self):
+        from reviewwise.pipeline import BatchResult, Review
+        partial = BatchResult([], .1, 'fixture', pending=[Review(1, 'Cold coffee.')])
+        with patch.object(manage.sys, 'argv', ['manage.py', 'smoke', '--text', 'Cold coffee.']), \
+             patch.object(manage, 'check_dependencies'), patch.object(manage, 'ensure_service'), \
+             patch('reviewwise.pipeline.analyze_reviews', return_value=partial):
+            with self.assertRaisesRegex(manage.SetupError, 'smoke test is incomplete'):
+                manage.main()
 
     def test_busy_port_uses_an_available_loopback_port(self):
         with patch.object(manage.socket, "socket") as factory:

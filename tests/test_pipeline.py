@@ -17,6 +17,7 @@ from reviewwise.pipeline import (
     reviews_from_csv, reviews_from_text, validate_extraction,
 )
 from reviewwise.report import render_report, reporting_week, suggested_actions
+from reviewwise.evidence import evidence_units, response_schema, decode_packet
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -24,6 +25,14 @@ ROOT = Path(__file__).resolve().parent.parent
 
 def response(content):
     return SimpleNamespace(message=SimpleNamespace(content=content))
+
+
+def stream_response(content):
+    yield response(content)
+
+
+def packet(number, unit=0, category="cold_coffee"):
+    return json.dumps({"results": [{"id": number, "positive": [], "complaints": [{"unit": unit, "category": category}]}]})
 
 
 class InputTests(unittest.TestCase):
@@ -85,17 +94,20 @@ class ExtractionTests(unittest.TestCase):
 
     def test_retry_is_bounded_and_uses_structured_output(self):
         client = Mock()
-        client.chat.side_effect = [response("not JSON"), response(self.good)]
+        client.chat.side_effect = [stream_response("not JSON"), stream_response(packet(7))]
         self.assertEqual(extract_review(client, self.review).complaints[0].category, "cold_coffee")
         self.assertEqual(client.chat.call_count, 2)
         self.assertEqual(client.chat.call_args.kwargs["model"], MODEL)
-        self.assertEqual(client.chat.call_args.kwargs["format"], Extraction.model_json_schema())
+        self.assertEqual(client.chat.call_args.kwargs["format"], response_schema([self.review]))
         self.assertEqual(client.chat.call_args.kwargs["options"]["temperature"], 0)
+        self.assertLessEqual(client.chat.call_args.kwargs["options"]["num_threads"], 2)
+        self.assertEqual(client.chat.call_args.kwargs["options"]["num_ctx"], 2048)
+        self.assertTrue(client.chat.call_args.kwargs["stream"])
 
     def test_invalid_extraction_and_timeout_do_not_fabricate_success(self):
         client = Mock()
-        client.chat.return_value = response("{}")
-        with self.assertRaisesRegex(ReviewWiseError, "No complete report"):
+        client.chat.side_effect = lambda **kwargs: stream_response("{}")
+        with self.assertRaisesRegex(ReviewWiseError, "failed validation"):
             extract_review(client, self.review)
         self.assertEqual(client.chat.call_count, 2)
         client.chat.side_effect = httpx.ReadTimeout("test timeout")
@@ -112,13 +124,17 @@ class ExtractionTests(unittest.TestCase):
         with self.assertRaisesRegex(ReviewWiseError, "model is missing"):
             require_model(client)
 
-    def test_failed_batch_does_not_return_partial_results(self):
+    def test_service_failure_retains_validated_results_and_lists_pending_reviews(self):
         with patch("reviewwise.pipeline.local_client") as factory:
             client = factory.return_value.__enter__.return_value
             client.list.return_value = SimpleNamespace(models=[SimpleNamespace(model=MODEL, digest="test")])
-            client.chat.side_effect = [response(self.good), ConnectionError("test disconnect")]
-            with self.assertRaisesRegex(ReviewWiseError, "review 2"):
-                analyze_reviews(make_reviews([self.review.text, "The service was slow."]))
+            client.chat.side_effect = [stream_response(packet(1)), ConnectionError("test disconnect")]
+            result = analyze_reviews(make_reviews([self.review.text, "The service was slow. " + "x" * 1500]))
+            self.assertEqual(len(result.analyses), 1)
+            self.assertEqual([review.number for review in result.pending], [2])
+            self.assertFalse(result.complete)
+            self.assertEqual(result.total_reviews, 2)
+            self.assertIn("Ollama", result.stop_reason)
 
 
 class SessionReuseTests(unittest.TestCase):
@@ -131,10 +147,11 @@ class SessionReuseTests(unittest.TestCase):
         self.client.list.return_value = SimpleNamespace(models=[SimpleNamespace(model=MODEL, digest="fixture-A")])
 
         def answer(**kwargs):
-            text = json.loads(kwargs["messages"][1]["content"])["review"]
-            return response(json.dumps({
-                "positives": [], "complaints": [{"category": "cold_coffee", "quote": text}],
-            }))
+            reviews = json.loads(kwargs["messages"][1]["content"])["reviews"]
+            return stream_response(json.dumps({"results": [
+                {"id": item["id"], "positive": [], "complaints": [{"category": "cold_coffee", "unit": 0}]}
+                for item in reviews
+            ]}))
 
         self.answer = answer
         self.client.chat.side_effect = answer
@@ -143,7 +160,7 @@ class SessionReuseTests(unittest.TestCase):
         reviews = make_reviews([f"Cold coffee, review {i}." for i in range(1, 81)])
         cache = {}
         first = analyze_reviews(reviews, cache=cache)
-        self.assertEqual(self.client.chat.call_count, 80)
+        self.assertEqual(self.client.chat.call_count, 20)
         self.assertEqual(len(first.analyses), 80)
         self.assertEqual(first.reused_reviews, 0)
         self.client.chat.reset_mock()
@@ -162,22 +179,23 @@ class SessionReuseTests(unittest.TestCase):
         self.assertIn("reused from this session: 80", report)
 
     def test_failed_report_can_resume_from_completed_validated_reviews(self):
-        reviews = make_reviews([f"Cold coffee {i}." for i in range(1, 5)])
+        reviews = make_reviews([f"Cold coffee {i}." for i in range(1, 9)])
         cache = {}
         self.client.chat.side_effect = [
-            self.answer(messages=[None, {"content": json.dumps({"review": reviews[0].text})}]),
-            self.answer(messages=[None, {"content": json.dumps({"review": reviews[1].text})}]),
+            self.answer(messages=[None, {"content": json.dumps({"reviews": [{"id": i} for i in range(1, 5)]})}]),
             ConnectionError("fixture disconnect"),
         ]
-        with self.assertRaisesRegex(ReviewWiseError, "review 3"):
-            analyze_reviews(reviews, cache=cache)
-        self.assertEqual(len(cache), 2)
+        partial = analyze_reviews(reviews, cache=cache)
+        self.assertEqual(len(partial.analyses), 4)
+        self.assertEqual(len(partial.pending), 4)
+        self.assertFalse(partial.complete)
+        self.assertEqual(len(cache), 4)
         self.client.chat.reset_mock()
         self.client.chat.side_effect = self.answer
         result = analyze_reviews(reviews, cache=cache)
-        self.assertEqual(self.client.chat.call_count, 2)
-        self.assertEqual(result.reused_reviews, 2)
-        self.assertEqual(len(result.analyses), 4)
+        self.assertEqual(self.client.chat.call_count, 1)
+        self.assertEqual(result.reused_reviews, 4)
+        self.assertEqual(len(result.analyses), 8)
 
     def test_identical_text_reuses_extraction_but_each_input_row_still_counts(self):
         result = analyze_reviews(make_reviews(["Cold coffee."] * 80), cache={})
@@ -190,7 +208,7 @@ class SessionReuseTests(unittest.TestCase):
         analyze_reviews(reviews, cache=cache)
         self.client.list.return_value.models[0].digest = "fixture-B"
         analyze_reviews(reviews, cache=cache)
-        with patch("reviewwise.pipeline.EXTRACTION_PROMPT", "Different fixture prompt"):
+        with patch("reviewwise.pipeline.COMPACT_PROMPT", "Different fixture prompt"):
             analyze_reviews(reviews, cache=cache)
         with patch("reviewwise.pipeline.EXTRACTION_OPTIONS", {"temperature": 0, "num_ctx": 2048, "num_predict": 1024}):
             analyze_reviews(reviews, cache=cache)
@@ -204,6 +222,49 @@ class SessionReuseTests(unittest.TestCase):
         self.assertEqual(self.client.chat.call_count, 2)
         self.assertEqual(result.reused_reviews, 0)
         self.assertEqual(complaint_rows(result.analyses)[0]["Reviews"], 1)
+
+    def test_invalid_review_twelve_does_not_discard_or_stop_other_reviews(self):
+        original_answer = self.answer
+
+        def answer(**kwargs):
+            items = json.loads(kwargs["messages"][1]["content"])["reviews"]
+            return stream_response('{}') if any(item['id'] == 12 for item in items) else original_answer(**kwargs)
+
+        self.client.chat.side_effect = answer
+        updates = []
+        result = analyze_reviews(make_reviews([f"Cold coffee {i}." for i in range(1, 81)]), cache={}, on_update=updates.append)
+        self.assertEqual(len(result.analyses), 79)
+        self.assertEqual([item.review.number for item in result.failures], [12])
+        self.assertEqual(len(result.pending), 0)
+        self.assertFalse(result.complete)
+        self.assertEqual(result.total_reviews, 80)
+        self.assertTrue(any(0 < len(item.analyses) < 79 and item.running for item in updates))
+        report = render_report(result)
+        self.assertIn('PARTIAL', report)
+        self.assertIn('Reviews analyzed: 79', report)
+        self.assertIn('Review 80:', report)
+        self.assertIn('Review 12: Cold coffee 12.', report)
+        self.assertIn('REVIEWS NEEDING ATTENTION', report)
+
+    def test_cancelling_closes_stream_and_preserves_pending_reviews(self):
+        stopped = False
+        closed = []
+
+        def stream(**kwargs):
+            nonlocal stopped
+            try:
+                stopped = True
+                yield response('{')
+            finally:
+                closed.append(True)
+
+        self.client.chat.side_effect = stream
+        result = analyze_reviews(make_reviews(['Cold coffee.']), should_stop=lambda: stopped)
+        self.assertTrue(closed)
+        self.assertEqual(len(result.pending), 1)
+        self.assertFalse(result.complete)
+        self.assertIn('Stopped by you', result.stop_reason)
+        self.assertEqual(result.analyses, [])
 
     def test_missing_model_digest_does_not_reuse_unidentified_weights(self):
         self.client.list.return_value.models[0].digest = None

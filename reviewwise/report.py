@@ -27,7 +27,7 @@ def reporting_week(day):
 
 def render_report(result, reporting_day=None):
     lines = [
-        "REVIEWWISE WEEKLY FEEDBACK REPORT" if reporting_day else "REVIEWWISE FEEDBACK REPORT", "",
+        ("REVIEWWISE WEEKLY FEEDBACK REPORT" if reporting_day else "REVIEWWISE FEEDBACK REPORT") + (" — PARTIAL" if not result.complete else ""), "",
     ]
     if reporting_day:
         start, end = reporting_week(reporting_day)
@@ -37,10 +37,15 @@ def render_report(result, reporting_day=None):
         ])
     lines.extend([
         f"Reviews analyzed: {len(result.analyses)}",
+        f"Reviews submitted: {result.total_reviews}",
+        f"Reviews needing attention: {len(result.failures)}",
+        f"Reviews pending: {len(result.pending)}",
+        "Coverage: complete" if result.complete else "Coverage: PARTIAL — counts cover validated reviews only",
         f"Model: {MODEL}", f"Model digest: {result.model_digest}",
         f"Report preparation time: {result.elapsed_seconds:.2f} seconds",
         f"New AI analyses: {len(result.analyses) - result.reused_reviews}",
         f"Validated analyses reused from this session: {result.reused_reviews}", "",
+        f"AI requests attempted: {result.ai_requests}", "",
         "COMPLAINTS (counted by Python)",
     ])
     rows = complaint_rows(result.analyses)
@@ -62,6 +67,15 @@ def render_report(result, reporting_day=None):
             lines.append(f"  {CATEGORIES[item.category]}: {item.quote}")
         if not analysis.extraction.positives and not analysis.extraction.complaints:
             lines.append("  No feedback extracted; inspect the original review.")
+    if result.failures:
+        lines.extend(["", "REVIEWS NEEDING ATTENTION — NOT COUNTED"])
+        for failure in result.failures:
+            lines.extend([f"Review {failure.review.number}: {failure.review.text}", f"  {failure.reason}"])
+    if result.pending:
+        lines.extend(["", "PENDING REVIEWS — NOT COUNTED"])
+        lines.extend(f"Review {review.number}: {review.text}" for review in result.pending)
+    if result.stop_reason:
+        lines.extend(["", f"Stopped: {result.stop_reason}"])
     lines.extend([
         "", "LIMITATIONS",
         "Counts are exact for validated AI labels, not guaranteed interpretations of the reviews.",

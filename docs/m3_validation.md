@@ -169,3 +169,38 @@ new model calls. Reuse only helps identical previously validated input with the
 same model/prompt/schema/settings; no cache or report is automatically written
 to disk. **Start over** clears the cache. Closing or restarting the app can lose
 session state. A class demo must identify reused reports and any cut waiting time.
+
+## Runtime correction in progress — 5 November 2026
+
+The user's Windows screenshots establish a real failure of the previous
+package: after a long wait, review 12 failed validation after two attempts and
+the 11 completed reviews were not shown as a report. The user reports 8 GB RAM
+and an Intel processor; the exact CPU is unknown. This is evidence that the
+earlier offline checks did **not** establish usable real-laptop behavior.
+The old error did not retain the specific rejected model output, so the precise
+validation defect is not known. No successful new real-model run is claimed.
+
+Current source adds a single background worker, incremental validated results,
+partial reports with separate failed/pending IDs, cancellation and duplicate-tab
+protection. Short reviews are grouped (up to four) and the model returns evidence
+IDs; Python copies the actual original passages. Requests use at most two CPU
+threads and shorter contexts/output bounds. The same Qwen 3B model is retained.
+The launcher reuses its recorded running instance, avoids importing the full app
+twice during warm checks, and cleans up its own process metadata on exit.
+
+| Check | Result and scope |
+|---|---|
+| Offline suite | **67 passed**, Python 3.12. Includes malformed/missing/duplicate IDs, original multilingual source passages, bounded fallback, review-12 failure, stream cancellation, cache isolation, actual worker concurrency, partial export and launcher reuse/cleanup. |
+| Request-count reduction | 80 distinct short test reviews used 20 fixture requests; replay used zero additional extraction requests. This is **not** a real latency/accuracy measurement. |
+| Actual rendered UI | Desktop/mobile Chromium fixture checks passed. Results appear during processing; a review-12 failure retains 79 results and one explicit failure; partial download includes all original references; stop and duplicate-tab rejection work; the other tab reenables after completion. |
+| Fixture provenance | The isolated SDK fixture lives outside the repository, has a visible test banner, and is not shipped. No external requests or browser errors. |
+| Source/data preservation | M2 experiments, user/sample CSV files, dependency locks and the model choice are unchanged. |
+| Real-model gate | **Blocked.** `qwen2.5:3b` is not installed in this managed environment; active policy does not allow `registry.ollama.ai`. That hostname is already in the saved configuration draft but not the active runtime policy. |
+| Release status | Source correction only; the Windows ZIP is still the previous `3569de5` package. It will not be refreshed until a real Qwen request validates the new path. |
+
+The reduced settings are a proposed resource tradeoff for an 8 GB laptop,
+not a verified memory/latency guarantee. Stopping a stalled request may wait
+until its next streamed chunk or the 60-second read timeout. Cache state remains
+session-only. The next required work is a real model/prompt/80-review test after
+the pending model-download network setting is applied, followed by a measured
+Windows run. The current smoke command returns failure for an incomplete result.

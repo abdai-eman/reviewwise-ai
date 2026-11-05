@@ -5,6 +5,12 @@ real model inference is currently blocked by cloud registry access. Windows
 installation, another person's laptop test and the demo video remain outstanding.
 See [validation evidence](docs/m3_validation.md). M3 is not yet complete or submitted.
 
+**5 November runtime correction — awaiting real-model verification:** current
+source adds live partial results, cancellation, duplicate-run protection and
+compact evidence IDs. **67 offline tests and fixture browser checks pass.**
+This is not an AI speed or accuracy result. The Windows ZIP still contains the
+previous `3569de5` package; it will be refreshed only after a real Qwen check.
+
 ## 1. What it does
 
 ReviewWise helps café owners understand customer reviews in English, French,
@@ -14,7 +20,9 @@ and download a weekly report with practical actions. Choose any day in the
 Monday–Sunday reporting week and supply the reviews collected during that week.
 Up to **1,000 reviews per report**, including an 80-row CSV, are accepted within
 the existing 1 MB file and 2,000-character-per-review limits. Every accepted row
-is analysed and counted; the input preview shows only the first 20.
+is tracked; only validated reviews contribute to complaint counts. Failed and
+pending reviews remain listed, and partial reports are labelled. The input
+preview shows only the first 20.
 Python performs the counting;
 AI interprets the reviews. Incorrect interpretations remain possible.
 
@@ -58,18 +66,30 @@ the packages/model and starts services automatically. No package installation
 or model download is attempted when the existing setup is current. Stop the app
 with Ctrl+C in the launcher window. Ollama may remain running; quit its
 application separately if you want to release its resources.
+The current source reopens an already running instance of the same project
+instead of starting another server. The browser can also have only one active
+analysis; a second tab cannot queue another model run.
 
 **Updating an existing copy with the redesigned interface:** stop the app first.
 Download and extract the current Windows package. Copy `app.py`, `reviewwise/`,
-`assets/` and `.streamlit/` into your existing project folder, replacing matching files, then
+`scripts/`, `assets/` and `.streamlit/` into your existing project folder, replacing matching files, then
 double-click its `START_REVIEWWISE.bat` again. Keep your existing `.venv` and
 review files. This UI update adds no dependencies and does not need a new model
 download. Refresh an already open browser tab with Ctrl+F5.
 
 **Weekly workflow and waiting time:** choose the reporting week, upload its
 reviews or paste one per line, then select **Find my next improvements**.
-A new report calls the real model for each distinct uncached review; it is not
-instant and a large first run can take several minutes or longer on a laptop.
+A new report sends up to four short uncached reviews per model call; long
+reviews are isolated. The model returns category and numbered evidence IDs,
+and Python copies the original text. Grouped responses that fail validation are
+retried as individual reviews. A repeatedly invalid review is listed as needing
+attention; it does not discard successful results or prevent the remaining
+reviews being processed. Connection failures/timeouts stop further requests
+and retain a partial report with explicit pending reviews.
+The background worker leaves the page available. Validated results appear while
+the analysis continues. **Stop analysis** closes the streamed request on its
+next response; a stalled read can take up to its 60-second timeout. A first run
+can still take several minutes or longer on a laptop.
 Actual first-run time for 80 new reviews has not been measured here.
 Completed, validated extractions stay in the current session. Retrying after
 a failure reuses completed work; repeating the same input reuses the matching
@@ -78,6 +98,11 @@ fresh extraction. Reused analyses are labelled in the screen and download.
 No automatic report/cache files are written. Keep the same session open for a
 class presentation; **Start over**, closing the app or restarting it can lose
 the cache. Download a finished report if you need to keep it.
+**Release AI memory** asks Ollama to unload this model when no analysis is
+running. New uncached input will need to load it again. Request settings limit
+CPU inference to at most two threads and use a 2,048-token context for short
+groups (4,096 for long reviews). This reduces requested resources; it does not
+establish acceptable speed or memory use on an 8 GB Windows laptop.
 
 The professor uses File Explorer and the browser. The developer terminal commands
 later in this README are not part of these setup steps. The GitHub **Code → Download ZIP**
@@ -119,7 +144,7 @@ the recorded checks. macOS and other distributions are not yet verified targets.
 | Browser does not open | Use the local address printed by Streamlit in the terminal. |
 | Application port already in use | The launcher chooses an available port automatically; use the address printed in its window. |
 | Analysis times out / model cannot load | Close memory-heavy applications and try one shorter review. CPU inference can take minutes. |
-| Extraction cannot be validated | Try that review separately. No completed report is produced from a failed batch. |
+| Extraction cannot be validated | Current source lists the failed review and retains validated results in a clearly labelled partial report. Retry after editing it, or inspect the original evidence. |
 
 Developer checks from the repository root (not additional professor setup steps):
 
@@ -136,9 +161,11 @@ The smoke command calls the real model; unit/UI fixtures are not proof of AI qua
 
 ![ReviewWise M3 architecture](docs/architecture.svg)
 
-The browser talks to a local Streamlit process. Python validates input and sends
-one review at a time to local Ollama with a JSON schema. It validates the returned
-types, categories and verbatim evidence quotes. A temporary session cache reuses
+The browser talks to a local Streamlit process. One cancellable background
+worker sends groups of up to four short reviews to local Ollama with a JSON
+schema. Python validates review IDs, category labels and evidence-unit IDs,
+then copies passages from the original text and checks quotation traceability.
+A temporary session cache reuses
 matching validated extractions and revalidates their evidence before reuse.
 Python then counts distinct review IDs
 per complaint. A template report presents counts, positive evidence and up to
@@ -162,8 +189,10 @@ analysis uses a fixed loopback address. [Diagram source](docs/architecture.dot).
   Category/action definitions and model limits are in
   [reviewwise/config.py](reviewwise/config.py); the schema and extraction call
   are in [reviewwise/pipeline.py](reviewwise/pipeline.py).
-- **Processing:** structured extraction at temperature zero; at most two attempts
-  per review. Python validates evidence and counts. Actions use category templates.
+- **Processing:** structured classification of numbered evidence at temperature
+  zero; an invalid group is isolated into individual requests. An invalid
+  individual review is listed, not counted as a successful empty result.
+  Python validates evidence and counts; action templates remain deterministic.
 - **Data:** user-supplied reviews or the labelled fictional M2 example in
   `experiments/reviews.json`. No scraping, cloud fallback or mocked app responses.
 
@@ -192,8 +221,9 @@ outcomes and the test protocol are in [docs/m3_validation.md](docs/m3_validation
    inspect them individually. Actions cover only recognized categories.
 4. Reports accept up to 1,000 reviews of at most 2,000 characters each; CSVs
    must fit within 1 MB. CPU analysis can be slow, especially for a new 80-review
-   file. A failed review stops the report; retrying the same input in the same
-   session reuses completed validated analyses.
+   file. Validation failures are listed in partial reports; connection failures,
+   timeouts or cancellation leave explicit pending reviews. Retrying in the
+   same session reuses completed validated analyses.
 5. Duplicate rows count separately. Dates, business identity and authenticity
    are not verified. The reporting week is user-supplied; input dates are not
    checked or filtered. Only upload reviews for the intended week.
@@ -217,9 +247,11 @@ M1 cited approximately 2,675 accommodation/food-service businesses in 2022
 this is a broad sector total, not a verified café market size. The interviews
 in `PROJECT_LOG.md` did not establish a willingness-to-pay amount.
 
-A first report of 80 distinct uncached reviews needs 80 extraction calls × €0
-metered local API fee = **€0 metered API fees**; one retry per review permits up
-to 160 calls. Reusing validated analyses requires no new extraction call for
+A successful report of 80 distinct short uncached reviews can use 20 four-review
+requests × €0 metered local API fee = **€0 metered API fees**. Longer reviews and
+invalid group responses increase calls; the bounded individual fallback can
+reach 160 calls in the worst case. These are request counts, not runtime estimates.
+Reusing validated analyses requires no new extraction call for
 those rows, but still checks the installed model identity. Electricity,
 hardware and support costs remain unmeasured. Pricing and margins need customer
 evidence. Alternatives include Trustpilot Business, Birdeye and manual reading;

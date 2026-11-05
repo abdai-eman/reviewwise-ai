@@ -16,6 +16,7 @@ import time
 import urllib.error
 import urllib.request
 import venv
+import webbrowser
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -127,11 +128,12 @@ def requirements_digest():
     return hashlib.sha256((ROOT / "requirements.txt").read_bytes()).hexdigest()
 
 
-def check_dependencies():
+def check_dependencies(verify_imports=True):
     if not PYTHON.is_file() or not MARKER.is_file() or MARKER.read_text() != requirements_digest():
         raise SetupError("Python dependencies need setup. Double-click START_REVIEWWISE.bat or run bash setup.sh.")
+    probe = "import streamlit, ollama, pydantic" if verify_imports else "import importlib.util; assert all(importlib.util.find_spec(name) is not None for name in ['streamlit','ollama','pydantic'])"
     run(
-        [str(PYTHON), "-c", "import streamlit, ollama, pydantic"],
+        [str(PYTHON), "-c", probe],
         "Python dependencies could not be loaded. Rerun setup to repair the virtual environment.",
     )
 
@@ -141,7 +143,7 @@ def ensure_dependencies(force=False):
     check_python()
     if not force:
         try:
-            check_dependencies()
+            check_dependencies(verify_imports=False)
             return
         except SetupError:
             pass
@@ -228,18 +230,88 @@ def available_port(preferred):
         return probe.getsockname()[1]
 
 
+def process_alive(pid):
+    if not isinstance(pid, int) or pid <= 0:
+        return False
+    if os.name == "nt":
+        # os.kill(pid, 0) is unsafe on Windows: use a read-only process query.
+        import ctypes
+        from ctypes import wintypes
+        kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel.OpenProcess.argtypes = (wintypes.DWORD, wintypes.BOOL, wintypes.DWORD)
+        kernel.OpenProcess.restype = wintypes.HANDLE
+        kernel.GetExitCodeProcess.argtypes = (wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD))
+        kernel.GetExitCodeProcess.restype = wintypes.BOOL
+        kernel.CloseHandle.argtypes = (wintypes.HANDLE,)
+        kernel.CloseHandle.restype = wintypes.BOOL
+        handle = kernel.OpenProcess(0x1000, False, pid)
+        if not handle:
+            return False
+        try:
+            code = wintypes.DWORD()
+            return bool(kernel.GetExitCodeProcess(handle, ctypes.byref(code))) and code.value == 259
+        finally:
+            kernel.CloseHandle(handle)
+    try:
+        os.kill(pid, 0)
+        return True
+    except (OSError, ValueError):
+        return False
+
+
+def existing_app_url():
+    try:
+        state = json.loads((STATE / "app.json").read_text())
+        if state.get("root") != str(ROOT.resolve()) or not process_alive(state.get("pid")):
+            return None
+        port = state["port"]
+        if not isinstance(port, int) or not 1024 <= port <= 65535:
+            return None
+        return f"http://127.0.0.1:{port}"
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+
+
+def run_app(command, port):
+    STATE.mkdir(exist_ok=True)
+    path = STATE / "app.json"
+    try:
+        process = subprocess.Popen(command, cwd=ROOT)
+    except OSError as exc:
+        raise SetupError("ReviewWise could not start. Rerun setup.bat to repair the Python environment.") from exc
+    try:
+        path.write_text(json.dumps({"root": str(ROOT.resolve()), "pid": process.pid, "port": port}))
+        code = process.wait()
+        if code not in (0, 130):
+            raise SetupError("ReviewWise stopped with an error. Read the message above; run setup.bat if dependencies are missing.")
+    finally:
+        if process.poll() is None:
+            process.terminate()
+        try:
+            if json.loads(path.read_text()).get("pid") == process.pid:
+                path.unlink()
+        except (OSError, ValueError):
+            pass
+
+
 def launch(headless=False, port=8501):
+    existing = existing_app_url()
+    if existing:
+        print("ReviewWise is already running. Reusing the existing application.", flush=True)
+        if not headless:
+            webbrowser.open(existing)
+        return
     ensure_dependencies()
     print("Checking local Ollama and the review-analysis model...", flush=True)
     ensure_model()
     port = available_port(port)
     print("Opening ReviewWise. Keep this window open while using the application.", flush=True)
-    run(
+    run_app(
         [str(PYTHON), "-m", "streamlit", "run", str(ROOT / "app.py"),
          "--server.address=127.0.0.1", f"--server.port={port}",
          "--browser.gatherUsageStats=false", "--server.fileWatcherType=none",
          f"--server.headless={'true' if headless else 'false'}"],
-        "ReviewWise stopped with an error. Read the message above and restart START_REVIEWWISE.bat.",
+        port,
     )
 
 
@@ -285,6 +357,8 @@ def main():
         ensure_service()
         result = analyze_reviews(reviews_from_text(args.text))
         print(render_report(result))
+        if not result.complete:
+            raise SetupError("The real-model smoke test is incomplete. See the partial report and failure details above.")
         print("Real model extraction completed. Check its interpretation manually.")
 
 

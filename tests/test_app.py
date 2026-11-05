@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 from streamlit.testing.v1 import AppTest
 
-from reviewwise.pipeline import Analysis, BatchResult, Extraction, Review, ReviewWiseError
+from reviewwise.pipeline import Analysis, BatchResult, Extraction, FailedReview, Review, ReviewWiseError
 
 
 APP = str(Path(__file__).resolve().parent.parent / "app.py")
@@ -92,19 +92,21 @@ class AppTests(unittest.TestCase):
             self.assertIn("result", app.session_state)
             analyze.assert_called_once()
 
-    def test_partial_failure_keeps_input_and_does_not_show_a_complete_report(self):
-        def fail(reviews, progress=None, cache=None):
-            progress(1, len(reviews))
-            raise ReviewWiseError("Review 2 could not be validated after two AI attempts.")
+    def test_partial_failure_keeps_input_and_displays_a_labelled_partial_report(self):
+        def fail(reviews, **kwargs):
+            return BatchResult([Analysis(reviews[0], Extraction(positives=[], complaints=[{'category': 'cold_coffee', 'quote': reviews[0].text}]))],
+                               0.1, 'UI-fixture', failures=[FailedReview(reviews[1], 'Fixture validation failure')])
 
         with patch("reviewwise.pipeline.analyze_reviews", side_effect=fail):
             app = open_app()
             app.text_area[0].input("Cold coffee.\nSlow service.").run()
             button(app, ACTION).click().run()
             self.assertEqual(len(app.exception), 0)
-            self.assertNotIn("result", app.session_state)
+            self.assertIn("result", app.session_state)
+            self.assertFalse(app.session_state.result.complete)
             self.assertEqual(app.text_area[0].value, "Cold coffee.\nSlow service.")
-            self.assertTrue(any("1 of 2 reviews completed" in item.value for item in app.caption))
+            self.assertTrue(any("Partial coverage: 1 of 2" in item.value for item in app.warning))
+            self.assertEqual(len(app.dataframe), 1)
 
     def test_positive_only_result_does_not_invent_complaints_or_actions(self):
         fixture = BatchResult([Analysis(Review(1, "Friendly staff."), Extraction(

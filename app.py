@@ -10,8 +10,9 @@ import streamlit as st
 
 from reviewwise.config import CATEGORIES, MAX_REVIEW_LENGTH, MAX_REVIEWS, MODEL, OLLAMA_URL
 from reviewwise.pipeline import (
-    ReviewWiseError, analyze_reviews, complaint_rows, reviews_from_csv, reviews_from_text,
+    ReviewWiseError, complaint_rows, local_client, reviews_from_csv, reviews_from_text,
 )
+from reviewwise.jobs import is_busy, start_job
 from reviewwise.report import render_report, reporting_week, suggested_actions
 
 
@@ -58,7 +59,7 @@ def explain_error(error):
         return "The analysis model isn’t ready yet.", "Reopen the ReviewWise launcher with internet access to finish setup, then try again."
     if "unavailable" in message:
         return "We couldn’t reach your local AI.", "Open Ollama on this computer, then try again. Your reviews are still here."
-    if "could not analyze" in message:
+    if "could not analyze" in message or "could not analyse" in message:
         return "The local AI couldn’t analyse this review.", "Check that Ollama is open. Close applications that use a lot of memory, then try the review on its own."
     if "timed out" in message:
         return "This review took longer than expected.", "Try a smaller batch or a shorter review, and close applications that use a lot of memory."
@@ -93,6 +94,9 @@ st.caption("Interpretations can vary by language, especially Luxembourgish. The 
 
 for key, default in [("saved_review_text", ""), ("saved_csv", b""), ("saved_csv_name", ""), ("analysis_cache", {})]:
     st.session_state.setdefault(key, default)
+job = st.session_state.get("analysis_job")
+busy = job is not None and job.running
+other_busy = is_busy() and not busy
 
 workspace, companion = st.columns([2.05, 1], gap="large")
 with workspace:
@@ -105,7 +109,7 @@ with workspace:
 
         reporting_day = st.date_input(
             "Reporting week — choose any day", value=date.today(), key="reporting_day",
-            format="DD/MM/YYYY", width=250,
+            format="DD/MM/YYYY", width=250, disabled=busy,
         )
         if reporting_day:
             week_start, week_end = reporting_week(reporting_day)
@@ -114,7 +118,7 @@ with workspace:
         else:
             st.warning("Choose a day in the reporting week to enable analysis.")
 
-        mode = st.radio("Review input", ["Paste reviews", "Upload CSV"], key="input_mode", horizontal=True, label_visibility="collapsed")
+        mode = st.radio("Review input", ["Paste reviews", "Upload CSV"], key="input_mode", horizontal=True, label_visibility="collapsed", disabled=busy)
         if mode == "Paste reviews":
             if "_review_text" not in st.session_state:
                 st.session_state._review_text = st.session_state.saved_review_text
@@ -122,6 +126,7 @@ with workspace:
                 "One review per line", key="_review_text", on_change=save_text, height=150,
                 placeholder="The staff were friendly, but the coffee was cold.\nLe service était agréable, mais nous avons attendu longtemps.",
                 max_chars=MAX_REVIEWS * (MAX_REVIEW_LENGTH + 1),
+                disabled=busy,
             )
             st.caption(f"Up to {MAX_REVIEWS:,} reviews per report · {MAX_REVIEW_LENGTH:,} characters per review.")
             raw_input = (mode, text)
@@ -133,6 +138,7 @@ with workspace:
             st.file_uploader(
                 "Choose a CSV file", type=["csv"], key="_csv_upload", on_change=save_csv,
                 max_upload_size=1, help="Use UTF-8 and a column named review. Other columns are not sent for analysis.",
+                disabled=busy,
             )
             st.caption(f"A column named ‘review’ is required · UTF-8 · Under 1 MB · Up to {MAX_REVIEWS:,} reviews per report.")
             if st.session_state.saved_csv_name:
@@ -153,7 +159,7 @@ with workspace:
 
         if reviews:
             st.caption(f"{review_count_label(len(reviews))} ready to analyse.")
-            st.caption("Every accepted review is included. New reviews are analysed one at a time; a large report can take several minutes or longer on a laptop. Repeat reports reuse validated analyses from this session.")
+            st.caption("Every accepted review is tracked. AI checks small groups; validated results appear below as they arrive. A review that needs attention is listed separately. A full first run can still take time on a laptop.")
             if len({review.text for review in reviews}) < len(reviews):
                 st.warning("Some reviews are identical. Each input row will count as a separate review.")
         elif (mode == "Paste reviews" and text.strip()) or (mode == "Upload CSV" and data):
@@ -162,7 +168,9 @@ with workspace:
             st.caption("Add a review or try the fictional sample to enable analysis." if mode == "Paste reviews" else "Upload a CSV or try the fictional sample to enable analysis.")
 
         with st.container(key="primary_action"):
-            start_analysis = st.button("Find my next improvements", type="primary", disabled=not reviews or not reporting_day, width="stretch")
+            start_analysis = st.button("Find my next improvements", type="primary", disabled=not reviews or not reporting_day or is_busy(), width="stretch")
+        if is_busy() and not busy:
+            st.warning("ReviewWise is already analysing a report in another tab. Finish or stop that analysis there before starting a new one.")
 
         if reviews:
             with st.expander(f"Preview {review_count_label(len(reviews))}"):
@@ -171,36 +179,19 @@ with workspace:
                 for review in reviews[:20]:
                     show_review_text(f"{review.number}. {review.text}")
 
-        st.button("Try sample reviews", on_click=load_sample)
+        st.button("Try sample reviews", on_click=load_sample, disabled=busy)
         st.caption("Ten fictional café reviews, provided for demonstration.")
 
         if start_analysis:
-            st.session_state.pop("result", None)
-            st.session_state.pop("last_result", None)
-            finished = {"count": 0}
-            progress = st.progress(0, text=f"0 of {review_count_label(len(reviews))} completed")
-
-            def update_progress(done, total):
-                finished["count"] = done
-                progress.progress(done / total, text=f"{done} of {review_count_label(total)} completed")
-
             try:
-                with st.spinner("Looking for patterns in your reviews…"):
-                    result = analyze_reviews(reviews, progress=update_progress, cache=st.session_state.analysis_cache)
-                st.session_state.result = result
-                st.session_state.last_result = result
-                st.session_state.result_input = raw_input
+                st.session_state.analysis_job = start_job(reviews, st.session_state.analysis_cache)
+                st.session_state.job_input = raw_input
+                st.session_state.job_finalized = False
+                st.session_state.pop("result", None)
+                st.session_state.pop("last_result", None)
+                st.rerun()
             except ReviewWiseError as exc:
-                title, guidance = explain_error(exc)
-                st.error(title)
-                st.write(guidance)
-                st.caption(f"{finished['count']} of {review_count_label(len(reviews))} completed before the batch stopped. No complete report was created.")
-                if st.session_state.analysis_cache:
-                    st.caption("Completed, validated analyses are kept in this session. Retry the same input to reuse them and continue with the remaining reviews.")
-                with st.expander("Technical details"):
-                    st.text(str(exc))
-            finally:
-                progress.empty()
+                st.error(str(exc))
 
 with companion:
     with st.container(border=True, key="companion"):
@@ -213,21 +204,32 @@ with companion:
     with st.expander("Processing details"):
         st.write(f"Model: {MODEL}")
         st.write(f"Model host: {HOST or 'not confirmed'}")
-        st.caption("AI extracts feedback. Python validates quotations and counts reviews. Suggestions use category-based action templates.")
+        st.caption("AI returns category and evidence-unit IDs for up to four short reviews per call. Python validates IDs, copies exact original passages and counts reviews. Suggestions use category-based templates.")
+        st.caption("CPU use is limited to at most two inference threads. Short groups use a 2,048-token context; long reviews use 4,096. The model can still use several GB of RAM. Speed and accuracy need a real laptop test.")
         st.caption("No database or automatic report files. Your inputs stay in this session; download a report only if you want to keep it.")
         st.caption(f"Up to {MAX_REVIEWS:,} validated analyses are retained in this session to speed up retries and repeat reports. Start over clears them; closing or restarting the app can lose them. Changed model weights, prompts or settings require fresh analysis.")
     if st.session_state.saved_review_text or st.session_state.saved_csv:
-        st.button("Start over", on_click=clear_workspace, width="stretch")
+        st.button("Start over", on_click=clear_workspace, width="stretch", disabled=busy)
+    if st.button("Release AI memory", disabled=is_busy(), width="stretch", help="Unload the local model. New reviews will need to load it again."):
+        try:
+            with local_client() as client:
+                client.generate(model=MODEL, prompt="", keep_alive=0)
+            st.success("Asked Ollama to unload the analysis model. Your results are kept in this session.")
+        except Exception:
+            st.warning("Could not release the model. Quit Ollama from the Windows system tray when you have finished analysing.")
 
-if "result" in st.session_state:
-    result = st.session_state.result
+def render_result(result, week_label, reporting_day):
     rows = complaint_rows(result.analyses)
     actions = suggested_actions(result.analyses)
     st.divider()
     st.markdown('<div class="rw-section-label">From feedback to focus</div>', unsafe_allow_html=True)
-    st.subheader("Your weekly feedback report")
+    st.subheader("Your weekly feedback report" if result.complete else "Your weekly feedback report — partial")
     st.write(f"**{week_label}**")
-    st.caption("Reporting week selected by you. This report includes your full input; review dates are not verified or filtered.")
+    st.caption("Reporting week selected by you. Review dates are not verified or filtered.")
+    if not result.complete:
+        st.warning(f"Partial coverage: {len(result.analyses)} of {result.total_reviews} reviews have validated results; {len(result.failures)} need attention and {len(result.pending)} are waiting. Counts below cover only validated reviews.")
+    if result.stop_reason:
+        st.info(result.stop_reason)
     st.caption(f"{review_count_label(len(result.analyses))} included · Report prepared in {result.elapsed_seconds:.1f} seconds")
     st.caption(f"{len(result.analyses) - result.reused_reviews} newly analysed by AI · {result.reused_reviews} reused from validated analyses in this session.")
     metrics = st.columns(3)
@@ -272,7 +274,7 @@ if "result" in st.session_state:
                 if any(row["category"] == "other" for row in rows):
                     st.caption("‘Other complaints’ may concern unrelated topics. Inspect those reviews individually.")
             else:
-                st.info("No complaints were identified in this batch. Check the original reviews for anything the model may have missed.")
+                st.info("No complaints were identified in the validated reviews so far. Pending or failed reviews are not included. Check the original evidence.")
         with praise:
             st.markdown("### What guests appreciate")
             positives = [(analysis.review.number, quote) for analysis in result.analyses for quote in analysis.extraction.positives]
@@ -301,7 +303,9 @@ if "result" in st.session_state:
 
     with evidence:
         st.caption("Original reviews and the exact quotations behind the findings.")
-        for analysis in result.analyses:
+        if result.running and len(result.analyses) > 5:
+            st.caption("Showing the latest five validated reviews while analysis runs. The download includes every validated review; the full evidence list appears when analysis stops or finishes.")
+        for analysis in (result.analyses[-5:] if result.running else result.analyses):
             with st.expander(f"Review {analysis.review.number}"):
                 st.write("**Original review**")
                 show_review_text(analysis.review.text)
@@ -315,9 +319,58 @@ if "result" in st.session_state:
                     show_review_text(f"{CATEGORIES[item.category]}: {item.quote}")
                 if not analysis.extraction.complaints:
                     st.caption("None extracted.")
-    st.download_button("Download my feedback report", render_report(result, reporting_day=reporting_day), f"reviewwise-week-{week_start.isoformat()}.txt", "text/plain", type="primary")
+        for failure in result.failures:
+            with st.expander(f"Review {failure.review.number} — needs attention"):
+                show_review_text(failure.review.text)
+                st.caption("Not included in complaint counts or suggestions.")
+                st.text(failure.reason)
+    start, _ = reporting_week(reporting_day)
+    st.download_button("Download my feedback report" if result.complete else "Download partial feedback report", render_report(result, reporting_day=reporting_day), f"reviewwise-week-{start.isoformat()}{'' if result.complete else '-partial'}.txt", "text/plain", type="primary")
     with st.expander("Report details"):
         st.text(f"Model: {MODEL}\nModel digest: {result.model_digest}")
-        st.caption("This report covers all accepted reviews for your selected reporting week. Review dates, business identity and authenticity have not been verified.")
+        st.caption(f"Coverage: {len(result.analyses)} validated / {result.total_reviews} submitted. Model requests: {result.ai_requests}. Review dates, business identity and authenticity have not been verified.")
+
+
+@st.fragment(run_every=1 if busy or other_busy else None)
+def analysis_panel():
+    if other_busy and not is_busy():
+        st.rerun()
+    if not reporting_day:
+        return
+    active_job = st.session_state.get("analysis_job")
+    if active_job and st.session_state.get("job_input") == raw_input:
+        result, error, cache, running, stopping = active_job.snapshot()
+        st.session_state.analysis_cache = cache
+        if not running and not st.session_state.get("job_finalized"):
+            st.session_state.job_finalized = True
+            if result:
+                st.session_state.result = result
+                st.session_state.last_result = result
+                st.session_state.result_input = raw_input
+            st.rerun()
+        if running:
+            checked = len(result.analyses) + len(result.failures) if result else 0
+            total = len(active_job.reviews)
+            st.progress(checked / total, text=f"{checked} of {total} reviews checked")
+            st.write("Stopping the active model request…" if stopping else "Looking for patterns in your reviews…")
+            if st.button("Stop analysis", disabled=stopping):
+                active_job.cancel()
+                st.rerun()
+            st.caption("Validated results appear below while analysis continues. Stopping closes the streamed request when the next response arrives; a stalled request can take up to the read timeout.")
+        if error:
+            title, guidance = explain_error(error)
+            st.error(title)
+            st.write(guidance)
+            with st.expander("Technical details"):
+                st.text(str(error))
+        if result:
+            render_result(result, week_label, reporting_day)
+        elif running:
+            st.info("Waiting for the first validated group. The browser remains available and you can stop the analysis above.")
+    elif "result" in st.session_state:
+        render_result(st.session_state.result, week_label, reporting_day)
+
+
+analysis_panel()
 
 st.markdown('<div class="rw-footer">ReviewWise · A clearer view of customer feedback for hospitality businesses in Luxembourg.</div>', unsafe_allow_html=True)

@@ -2,7 +2,7 @@ MODEL = "qwen2.5:3b"
 OLLAMA_URL = "http://127.0.0.1:11434"
 MAX_REVIEWS = 1000
 MAX_REVIEW_LENGTH = 2000
-REQUEST_TIMEOUT = 180.0
+REQUEST_TIMEOUT = 60.0
 
 CATEGORIES = {
     "slow_service": "Slow service",
