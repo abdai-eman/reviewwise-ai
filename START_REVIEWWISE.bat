@@ -28,6 +28,7 @@ winget install --id Python.Python.3.12 --exact --source winget --scope user --ar
 if errorlevel 1 goto python_install_failed
 call :find_python
 if not defined REVIEWWISE_PYTHON goto python_help
+goto launch
 
 :portable_launch
 echo ReviewWise - ready-to-run Windows edition
