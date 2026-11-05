@@ -33,7 +33,7 @@ def main():
         'source_commit': os.environ.get('GITHUB_SHA', ''),
         'workflow_run': os.environ.get('GITHUB_RUN_ID', ''),
         'platform': platform.platform(), 'python': platform.python_version(),
-        'model': MODEL, 'live_ai': True,
+        'model': MODEL, 'live_ai': False, 'live_ai_attempted': True,
         'input_provenance': 'Fictional evaluation sentences and the preserved fictional M2 sample; not customer data.',
         'passed': False,
     }
@@ -41,6 +41,7 @@ def main():
     write_json(path, evidence)
     try:
         smoke = analyze_reviews(reviews_from_text('The coffee was cold and the service was slow.'))
+        evidence['live_ai'] = smoke.ai_requests > 0
         evidence['smoke'] = encode(smoke)
         categories = {row['category'] for row in complaint_rows(smoke.analyses)}
         if not smoke.complete or not {'cold_coffee', 'slow_service'} <= categories:

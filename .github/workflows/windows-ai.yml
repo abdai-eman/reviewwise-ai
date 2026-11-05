@@ -84,7 +84,21 @@ jobs:
       - name: Real extraction and repeat-report check
         id: ai
         shell: pwsh
+        env:
+          OLLAMA_HOST: 127.0.0.1:11434
+          OLLAMA_NUM_PARALLEL: '1'
+          OLLAMA_MAX_LOADED_MODELS: '1'
+          OLLAMA_NO_CLOUD: '1'
         run: |
+          $ready = $false
+          try { Invoke-RestMethod 'http://127.0.0.1:11434/api/version' -TimeoutSec 2; $ready=$true } catch {}
+          if (-not $ready) {
+            Start-Process ollama -ArgumentList 'serve' -RedirectStandardOutput "$env:RUNNER_TEMP/ai-server.log" -RedirectStandardError "$env:RUNNER_TEMP/ai-server-error.log"
+            for ($i=0; $i -lt 30; $i++) {
+              try { Invoke-RestMethod 'http://127.0.0.1:11434/api/version' -TimeoutSec 2; $ready=$true; break } catch { Start-Sleep -Seconds 1 }
+            }
+          }
+          if (-not $ready) { throw 'The model server is unavailable in the inference step' }
           .\.venv\Scripts\python.exe scripts/verify_windows_ai.py 2>&1 | Tee-Object "$env:RUNNER_TEMP/ai.txt"
           exit $LASTEXITCODE
       - name: Preserve verification evidence on the feature branch
