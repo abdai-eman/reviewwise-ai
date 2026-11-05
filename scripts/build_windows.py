@@ -42,7 +42,7 @@ def main():
         env={**os.environ, 'REVIEWWISE_PYTHON_TO_VERIFY': str(runtime / 'python.exe')})
     for folder in ('reviewwise', 'scripts', 'assets', '.streamlit'):
         shutil.copytree(ROOT / folder, staging / folder, ignore=shutil.ignore_patterns('__pycache__', '*.pyc', 'secrets.toml'))
-    for name in ('START_REVIEWWISE.bat', 'README.md', 'requirements.txt', 'LICENSE'):
+    for name in ('app.py', 'START_REVIEWWISE.bat', 'README.md', 'requirements.txt', 'LICENSE'):
         if (ROOT / name).is_file():
             shutil.copy2(ROOT / name, staging / name)
     (staging / 'experiments').mkdir()
