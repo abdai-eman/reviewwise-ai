@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "recorded_at": "2026-11-05T12:36:58.848415+00:00",
-  "reporting_day": "2026-11-05",
+  "recorded_at": "2026-11-07T17:44:53.081554+00:00",
+  "reporting_day": "2026-11-07",
   "title": "Recorded AI example — fictional multilingual café reviews",
   "provenance": "Real Ollama execution in Windows CI on fictional M2 input; dates are demonstration metadata.",
   "model": "qwen2.5:3b",
@@ -13,13 +13,11 @@
           "text": "The coffee was excellent, but the service was very slow."
         },
         "extraction": {
-          "positives": [
-            "The coffee was excellent,"
-          ],
+          "positives": [],
           "complaints": [
             {
               "category": "slow_service",
-              "quote": "The coffee was excellent,"
+              "quote": "the service was very slow."
             }
           ]
         }
@@ -141,7 +139,12 @@
           "positives": [
             "D'Iesse war ganz gutt,"
           ],
-          "complaints": []
+          "complaints": [
+            {
+              "category": "unfriendly_staff",
+              "quote": "d'Personal war net frëndlech."
+            }
+          ]
         }
       },
       {
@@ -160,7 +163,7 @@
         }
       }
     ],
-    "elapsed_seconds": 32.287520400000005,
+    "elapsed_seconds": 40.66744030000018,
     "model_digest": "357c53fb659c5076de1d65ccb0b397446227b71a42be9d1603d46168015c9e4b",
     "reused_reviews": 0,
     "failures": [],
@@ -170,6 +173,6 @@
     "ai_requests": 7,
     "model_name": "qwen2.5:3b"
   },
-  "source_commit": "32d6c326c6c24a2cc319e4f00d6674edf2a30c80",
-  "workflow_run": "42028444818"
+  "source_commit": "0fefe71bc95834ffa676c5c8d03432e80a90f6d5",
+  "workflow_run": "42397705242"
 }

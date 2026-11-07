@@ -1,14 +1,14 @@
 {
-  "source_commit": "32d6c326c6c24a2cc319e4f00d6674edf2a30c80",
+  "source_commit": "0fefe71bc95834ffa676c5c8d03432e80a90f6d5",
   "python_version": "3.12.10",
   "python_source": "https://www.python.org/ftp/python/3.12.10/python-3.12.10-embed-amd64.zip",
   "python_archive_sha256": "4acbed6dd1c744b0376e3b1cf57ce906f9dc9e95e68824584c8099a63025a3c3",
-  "python_publisher_signature": "Valid — Python Software Foundation",
+  "python_publisher_signature": "Valid \u2014 Python Software Foundation",
   "requirements_sha256": "f36a61250042d9259d5c806736effcb5da95354f012c40d985e87124b070f533",
-  "native_portable_startup_seconds": 1.612,
+  "native_portable_startup_seconds": 1.681,
   "native_portable_imports": true,
   "native_portable_health_request": true,
-  "laptop_test": "Not performed by CI; must be completed on another person’s laptop.",
-  "package_bytes": 94388738,
-  "package_sha256": "5222680e8430fbec407f9c1595ba4d9de00e89ea5b06c7c61008f50e9a5d58ed"
+  "laptop_test": "Not performed by CI; must be completed on another person\u2019s laptop.",
+  "package_bytes": 94389318,
+  "package_sha256": "f0ad556a420d8883181af9f2c41c4f03c6b80925b21899f7aefe1e9c96bd2518"
 }
