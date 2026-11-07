@@ -20,7 +20,7 @@ from reviewwise.prompts import COMPACT_PROMPT
 from reviewwise.evidence import Packet, decode_packet, review_groups, response_schema, wire_reviews
 
 
-EXTRACTION_OPTIONS = {"temperature": 0, "num_ctx": 2048, "num_predict": 512, "num_threads": min(2, os.cpu_count() or 1)}
+EXTRACTION_OPTIONS = {"temperature": 0, "num_ctx": 2048, "num_predict": 512, "num_threads": min(4, max(1, (os.cpu_count() or 1) // 2))}
 
 
 class ReviewWiseError(Exception):
@@ -170,7 +170,7 @@ def extract_group(client, reviews, should_stop=None, stats=None):
             messages=[{"role": "system", "content": COMPACT_PROMPT},
                       {"role": "user", "content": json.dumps({"reviews": wire_reviews(reviews)}, ensure_ascii=False)}],
             format=response_schema(reviews), options=generation_options(reviews),
-            keep_alive="1m", stream=True,
+            keep_alive="10m", stream=True,
         )
         pieces = []
         for chunk in stream:

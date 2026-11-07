@@ -203,7 +203,6 @@ def render_result(result, week_label, reporting_day, recorded_at=None):
     start, _ = reporting_week(reporting_day)
     st.download_button("Download my feedback report" if result.complete else "Download partial feedback report", render_report(result, reporting_day=reporting_day), f"reviewwise-week-{start.isoformat()}{'' if result.complete else '-partial'}.txt", "text/plain", type="primary")
     with st.expander("Report details"):
-        st.text(f"Model: {result.model_name}\nModel digest: {result.model_digest}")
         st.caption(f"Coverage: {len(result.analyses)} validated / {result.total_reviews} submitted. Model requests: {result.ai_requests}. Review dates, business identity and authenticity have not been verified.")
 
 
@@ -304,7 +303,6 @@ with st.sidebar:
     st.caption("Language accuracy varies, especially Luxembourgish. Check the original evidence.")
     ai_preparation_panel()
     with st.expander("Processing & privacy"):
-        st.write(f"Analysis model: {MODEL}")
         st.caption("Reviews are processed on this computer." if IS_LOCAL else f"Reviews are sent to {HOST}.")
         st.caption("AI selects feedback; Python validates evidence and counts reviews. Saved reports stay on this device until you export or delete them.")
         st.caption("A first analysis can take time. Previously saved reports open without another model run.")
@@ -459,7 +457,7 @@ with companion:
     if st.session_state.saved_review_text or st.session_state.saved_csv:
         st.button("Start over", on_click=clear_workspace, width="stretch", disabled=busy)
     with st.expander("Local AI controls"):
-        st.caption("At most two inference threads; short groups use a 2,048-token context. A local model still needs RAM and processing time.")
+        st.caption("Up to four inference threads, scaled to this computer; short groups use a 2,048-token context. A local model still needs RAM and processing time.")
         if st.button("Release AI memory", disabled=is_busy(), width="stretch", help="Unload the model; new input will need to load it again."):
             try:
                 with local_client() as client:

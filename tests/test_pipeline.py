@@ -100,7 +100,7 @@ class ExtractionTests(unittest.TestCase):
         self.assertEqual(client.chat.call_args.kwargs["model"], MODEL)
         self.assertEqual(client.chat.call_args.kwargs["format"], response_schema([self.review]))
         self.assertEqual(client.chat.call_args.kwargs["options"]["temperature"], 0)
-        self.assertLessEqual(client.chat.call_args.kwargs["options"]["num_threads"], 2)
+        self.assertLessEqual(client.chat.call_args.kwargs["options"]["num_threads"], 4)
         self.assertEqual(client.chat.call_args.kwargs["options"]["num_ctx"], 2048)
         self.assertTrue(client.chat.call_args.kwargs["stream"])
 
