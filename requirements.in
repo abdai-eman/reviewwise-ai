@@ -1,0 +1,4 @@
+# Application dependencies. requirements.txt locks the complete resolved set.
+streamlit>=1.42,<2
+ollama>=0.6,<1
+pydantic>=2.10,<3

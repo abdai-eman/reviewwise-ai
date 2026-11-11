@@ -1,0 +1,47 @@
+digraph ReviewWise {
+  graph [rankdir=TB, bgcolor="white", fontname="Arial", pad="0.35", nodesep="0.3", ranksep="0.4", label="ReviewWise M3 — local weekly review reports", labelloc=t, fontsize=22];
+  node [shape=box, style="rounded,filled", fillcolor="#edf4ff", color="#5073a3", fontname="Arial", fontsize=12, margin="0.18,0.12"];
+  edge [fontname="Arial", fontsize=10, color="#4b5563"];
+  subgraph cluster_local {
+    label="USER'S COMPUTER — reviews stay inside this boundary";
+    color="#3b8060"; style="rounded"; fontname="Arial"; fontsize=16;
+    browser [label="Browser / Streamlit UI — app.py\nSelect Monday–Sunday reporting week\nPaste text or upload CSV; dates user-supplied"];
+    python [label="Python 3.11-3.15 / Streamlit 1.66.1\nreviewwise/pipeline.py + evidence.py\nUp to 1,000 reviews; numbered original passages"];
+    worker [label="reviewwise/jobs.py — one background worker\nUI polls live snapshots; duplicate runs rejected\nStop event closes the streamed model response"];
+    prompt [label="reviewwise/prompts.py: compact ID instructions\nreviewwise/evidence.py: JSON schema + source units\nAt most 2 CPU threads; short context 2,048", fillcolor="#fff5dd"];
+    ollama [label="Local Ollama API (127.0.0.1:11434)\nqwen2.5:3b / Python client 0.6.3\nRuntime 0.40.14; real Windows inference verified"];
+    validate [label="Python validates review IDs + category + unit IDs\nQuotes copied from original text and rechecked\nInvalid group isolated; bad reviews listed\nSemantic interpretation can still be wrong"];
+    count [label="Python: category → set of review IDs\nDeterministic counts and references"];
+    report [label="reviewwise/report.py — live and final reports\nExplicit validated / failed / pending coverage\nPartial download; up to 3 supported actions"];
+    session [shape=cylinder, label="Temporary Streamlit session\nOriginal reviews + validated results\nSession cache lost on restart / Start over", fillcolor="#e7f5ec"];
+    cache [shape=cylinder, label="Temporary validated-extraction cache\nKey: text + model digest + prompt + schema + options\nEvidence rechecked; bounded to 1,000 entries\nRetry reuses completed work; Start over clears it", fillcolor="#e7f5ec"];
+    weights [shape=cylinder, label="Ollama model files on local disk\nInstalled digest recorded by doctor/report", fillcolor="#e7f5ec"];
+    download [shape=note, label="Explicit TXT / portable JSON export\nUser controls retention", fillcolor="#e7f5ec"];
+    setup [label="START_REVIEWWISE.bat + scripts/manage.py\nBundled Python + hash-locked packages on Windows\nWinGet: missing Ollama only; model download\nInterface opens while AI setup runs in background"];
+    saved [shape=cylinder, label="reviewwise/storage.py — explicit saved reports\nLocal disk; validate imports; recompute counts\nOpen genuine reports without model inference", fillcolor="#e7f5ec"];
+    secrets [shape=note, label="No API keys or secrets required\nFixed loopback model destination\nLauncher disables Streamlit usage telemetry", fillcolor="#fff5dd"];
+    browser -> worker [label="start / stop; input"];
+    worker -> python [label="one owned run + snapshots"];
+    prompt -> python [label="schema / instructions / settings"];
+    python -> ollama [label="up to 4 short reviews + schema; streamed response"];
+    python -> cache [label="match input / model identity"];
+    cache -> validate [label="reused extraction; recheck evidence"];
+    validate -> cache [label="save only validated extraction"];
+    weights -> ollama [label="local weights"];
+    ollama -> validate [label="structured extraction"];
+    validate -> count [label="validated labels + evidence"];
+    count -> report [label="counts + original review references"];
+    report -> browser [label="results"];
+    python -> session [label="input"];
+    report -> session [label="results"];
+    browser -> saved [label="Save / reopen / delete"];
+    saved -> report [label="validated saved analysis"];
+    browser -> download [label="user chooses Download"];
+    setup -> python [style=dashed, label="packages / startup"];
+    setup -> weights [style=dashed, label="initial model pull"];
+    secrets -> python [style=dotted];
+  }
+  internet [shape=box, fillcolor="#fcece9", label="EXTERNAL SERVICES — setup/downloads only\nWinGet community source / python.org / Ollama installer\nPyPI + package files / Ollama model registry\nNetwork metadata only; no review text"];
+  setup -> internet [style=dashed, label="installation/download requests"];
+  internet -> setup [style=dashed, label="installers / Python packages / model files"];
+}

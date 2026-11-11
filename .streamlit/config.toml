@@ -1,0 +1,25 @@
+[theme]
+base = "light"
+primaryColor = "#245747"
+backgroundColor = "#F7F5EF"
+secondaryBackgroundColor = "#FFFFFF"
+textColor = "#08190E"
+font = "Arial, sans-serif"
+headingFont = "Georgia, serif"
+baseFontSize = 16
+baseRadius = "0.75rem"
+borderColor = "#DEDCD1"
+showWidgetBorder = true
+
+[browser]
+gatherUsageStats = false
+
+[client]
+toolbarMode = "minimal"
+
+[theme.sidebar]
+backgroundColor = "#173C2E"
+secondaryBackgroundColor = "#2C5140"
+textColor = "#FFF9EE"
+primaryColor = "#E2B38C"
+borderColor = "#48624E"

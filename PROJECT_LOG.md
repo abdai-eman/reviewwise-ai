@@ -69,7 +69,8 @@ https://statistiques.public.lu/dam-assets/catalogue-publications/luxembourg-en-c
 ### Writing Improvement Tool Used
 
 Grammarly was used to check grammar and improve wording.
-______________________________________________________________________________________________---
+
+
 ## M2 – Technology Exploration and Project Proposal
 **Date:** 19 October 2026
 
@@ -124,3 +125,41 @@ Electricity and hardware costs have not yet been measured.
 ### 7. Repository
 The project repository contains the AI experiments, saved results, and documentation.
 
+## M3 — Minimum Viable Product
+
+**Date:** 11 November 2026
+
+### What changed since M2
+
+We turned the M2 experiments into a working local application for café owners. Users can paste reviews or upload a CSV, select a reporting week, and generate a report with recurring complaints, positive feedback, original supporting passages, and suggested actions.
+
+Qwen2.5 3B runs locally through Ollama and identifies complaints and praise in the supplied reviews. Python validates the evidence references and counts each review once per complaint category. This addresses the counting errors we saw in M2. Suggested actions use templates tied to the extracted categories. Fresh analysis calls the actual model without mocked responses.
+
+### Setup and testing
+
+Team members tested ReviewWise on each other’s laptops and encountered no issues. The [README](README.md) documents the three Windows setup steps.
+
+**Real-input test:** The [demo video](https://www.youtube.com/watch?v=BEC7LJjvb2o) shows ReviewWise analysing real customer reviews with the local model and displaying the resulting report.
+
+Windows CI passed 79 automated tests and verified the Windows package, launcher, and workflow from fictional input through the local model to the displayed report. [View the Windows CI run](https://github.com/abdai-eman/reviewwise-ai/actions/runs/42397705242).
+
+### Architecture
+
+Reviews flow from the Streamlit interface through a background worker to the local Ollama model. Python validates the evidence, counts complaints, and builds the report. Review analysis runs on the user’s computer and requires no API key. See the [M3 architecture diagram](docs/architecture.svg).
+
+### Known limitations
+
+- The model can miss or misclassify feedback. Users should check the original passages behind the findings.
+- Local analysis can be slow on laptops with limited memory.
+- The “Other” category can group unrelated complaints.
+- The reporting week is selected by the user. The app does not verify review dates or filter reviews by week.
+
+### Demo video
+
+The demo was recorded from the running application. [Watch the ReviewWise demo on YouTube](https://www.youtube.com/watch?v=BEC7LJjvb2o).
+
+### Contributions since M2
+
+- **MAKNI Abdourrahmane:** Reviewed the full project, tested the application, and created the demo video.
+- **HAFT Benjamin:** Contributed to application development and helped write the README.
+- **ABDAI Eman:** Developed ReviewWise with Codex assistance and worked on the M3 summary PDF and project log.

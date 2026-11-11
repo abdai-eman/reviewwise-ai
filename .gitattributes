@@ -1,0 +1,6 @@
+# Keep native Windows launcher line endings in Git and downloaded archives.
+*.bat -text whitespace=cr-at-eol
+*.sh text eol=lf
+
+# Do not embed a previously generated distribution inside the next source ZIP.
+download export-ignore
