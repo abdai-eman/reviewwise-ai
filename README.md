@@ -57,7 +57,7 @@ Fresh review analysis calls the actual model to identify complaints and positive
 
 Team members tested ReviewWise on each other's laptops and encountered no issues during those tests.
 
-**M3 real-input test:** [Enter how many reviews the app analysed from Workbook1.csv and give one finding you checked against its original review.]
+**M3 real-input test:** The [demo video](https://www.youtube.com/watch?v=BEC7LJjvb2o) shows ReviewWise analysing real customer reviews with the local model and displaying the resulting report.
 
 The [Windows CI run](https://github.com/abdai-eman/reviewwise-ai/actions/runs/42397705242) separately verified the full path from fresh fictional input through the actual local model to the report shown in the app. It also passed 79 automated tests and verified the Windows package and launcher.
 
