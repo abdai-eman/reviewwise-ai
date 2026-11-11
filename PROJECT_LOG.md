@@ -69,7 +69,8 @@ https://statistiques.public.lu/dam-assets/catalogue-publications/luxembourg-en-c
 ### Writing Improvement Tool Used
 
 Grammarly was used to check grammar and improve wording.
-______________________________________________________________________________________________---
+
+
 ## M2 – Technology Exploration and Project Proposal
 **Date:** 19 October 2026
 
@@ -124,47 +125,41 @@ Electricity and hardware costs have not yet been measured.
 ### 7. Repository
 The project repository contains the AI experiments, saved results, and documentation.
 
-## M3 — MVP preparation (4 November 2026, draft)
+## M3 — Minimum Viable Product
 
-Prepared a Docker-free local interface with pasted/CSV input, Ollama structured
-extraction, Pydantic validation, Python counting, evidence inspection and
-downloadable template reports. Added hash-locked dependencies, Windows/Unix
-setup/start scripts, an exported diagram and M3 submission drafts. Original
-M2 files and evidence are unchanged.
+**Date:** 11 November 2026
 
-Validation: 24 offline unit/UI tests pass on Linux. Python dependencies install
-and native Ollama 0.40.14 starts. The cloud proxy blocks its model registry,
-so real M3 inference is not yet verified. No Windows/other-laptop test, video,
-M3 tag or submission is claimed. See `docs/m3_validation.md` and `docs/m3_submission.md`.
+### What changed since M2
 
-Codex assisted with code, tests and documentation. Actual contributions since M2
-must be confirmed by the team; planned assignments are not proof of completed
-work. Every member must review and understand the implementation.
+We turned the M2 experiments into a working local application for café owners. Users can paste reviews or upload a CSV, select a reporting week, and generate a report with recurring complaints, positive feedback, original supporting passages, and suggested actions.
 
-The implementation draft is prepared on the separate `m3-mvp` branch for team
-review and download. `main` and the M2 evidence remain unchanged. This branch
-does not establish that the remaining M3 inference/laptop checks have passed.
+Qwen2.5 3B runs locally through Ollama and identifies complaints and praise in the supplied reviews. Python validates the evidence references and counts each review once per complaint category. This addresses the counting errors we saw in M2. Suggested actions use templates tied to the extracted categories. Fresh analysis calls the actual model without mocked responses.
 
-### Startup simplification — 4 November 2026
+### Setup and testing
 
-Added `START_REVIEWWISE.bat` as a single Windows entry point. First launch can
-install missing Python/Ollama through WinGet, prepare dependencies/model and
-open the browser; later launches reuse the installation. Updated the professor's
-instructions to download, extract and double-click, with a five-step manual
-fallback when WinGet is unavailable. Paths with spaces, failed preparation,
-warm starts and occupied ports are covered by the launcher logic/tests.
-37 offline tests pass on Linux; native Windows installation and real inference
-still need independent verification. Changes remain on `m3-mvp` only.
+Team members tested ReviewWise on each other’s laptops and encountered no issues. The [README](README.md) documents the three Windows setup steps.
 
-Added a dedicated Windows ZIP with START_REVIEWWISE.bat at its root, avoiding
-GitHub's extra source-folder level after extraction. The professor-facing path
-uses download, Extract All and double-click; terminal diagnostics are not part
-of that handoff. Windows execution still needs the independent laptop check.
+**Real-input test:** The [demo video](https://www.youtube.com/watch?v=BEC7LJjvb2o) shows ReviewWise analysing real customer reviews with the local model and displaying the resulting report.
 
-Removed the unnecessarily strict Python 3.12-only detection. Existing 64-bit
-Python 3.11-3.15 can be reused; a new Python installation requires explicit
-confirmation if detection fails. The dependency lock retains checksums and
-selects a compatible NumPy version on 3.11. All 39 offline tests pass across the
-five supported Python versions on the development host. Windows-native and
-real-model verification remain outstanding.
+Windows CI passed 79 automated tests and verified the Windows package, launcher, and workflow from fictional input through the local model to the displayed report. [View the Windows CI run](https://github.com/abdai-eman/reviewwise-ai/actions/runs/42397705242).
 
+### Architecture
+
+Reviews flow from the Streamlit interface through a background worker to the local Ollama model. Python validates the evidence, counts complaints, and builds the report. Review analysis runs on the user’s computer and requires no API key. See the [M3 architecture diagram](docs/architecture.svg).
+
+### Known limitations
+
+- The model can miss or misclassify feedback. Users should check the original passages behind the findings.
+- Local analysis can be slow on laptops with limited memory.
+- The “Other” category can group unrelated complaints.
+- The reporting week is selected by the user. The app does not verify review dates or filter reviews by week.
+
+### Demo video
+
+The demo was recorded from the running application. [Watch the ReviewWise demo on YouTube](https://www.youtube.com/watch?v=BEC7LJjvb2o).
+
+### Contributions since M2
+
+- **MAKNI Abdourrahmane:** Reviewed the full project, tested the application, and created the demo video.
+- **HAFT Benjamin:** Contributed to application development and helped write the README.
+- **ABDAI Eman:** Developed ReviewWise with Codex assistance and worked on the M3 summary PDF and project log.
