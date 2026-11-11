@@ -20,36 +20,36 @@ ReviewWise helps small businesses in Luxembourg make better use of customer revi
 
 ### M3 — Windows setup
 
-1. [Download the Windows package](https://github.com/abdai-eman/reviewwise-ai/raw/refs/heads/m3-mvp/download/ReviewWise-M3-Windows.zip).
+1. [Download the Windows package](https://github.com/abdai-eman/reviewwise-ai/raw/refs/heads/main/download/ReviewWise-M3-Windows.zip).
 2. Right-click the ZIP, choose **Extract All**, and open the extracted folder.
 3. Double-click **`START_REVIEWWISE.bat`** and keep its window open. ReviewWise opens in your browser.
 
-The linked Windows package includes Python and the app dependencies. On first launch, internet access is needed if the launcher has to install Ollama or download the `qwen2.5:3b` model. Wait for local AI setup to finish before running an analysis. If WinGet is unavailable, [install Ollama for Windows](https://ollama.com/download/windows) first, then follow the three steps above.
+The Windows package includes Python and the app dependencies. On first launch, internet access is needed if the launcher has to install Ollama or download the `qwen2.5:3b` model. Wait for local AI setup to finish before running an analysis. If WinGet is unavailable, [install Ollama for Windows](https://ollama.com/download/windows) first, then follow the three steps above.
 
 ### Try the test CSV
 
-1. Open [Workbook1.csv](https://github.com/abdai-eman/reviewwise-ai/blob/m3-mvp/examples/Workbook1.csv) and click **Download raw file** on GitHub (or [download it directly](https://github.com/abdai-eman/reviewwise-ai/raw/refs/heads/m3-mvp/examples/Workbook1.csv)).
+1. Open [Workbook1.csv](examples/Workbook1.csv) and click **Download raw file** on GitHub, or [download it directly](https://github.com/abdai-eman/reviewwise-ai/raw/refs/heads/main/examples/Workbook1.csv).
 2. In ReviewWise, open **Analyse reviews**, select a reporting week, and upload the CSV.
 3. Click **Find my next improvements** to analyse the 50 reviews.
 4. Open **Review evidence** to see the original passages behind the findings.
-You can also paste one review per line or upload your own UTF-8 CSV with a `review` column.
-### M3 demo
-## Demo video
 
-[Watch the ReviewWise demo on YouTube](https://www.youtube.com/watch?v=BEC7LJjvb2o)
-The video was recorded from the running application.
+You can also paste one review per line or upload your own UTF-8 CSV with a `review` column.
+
+### M3 demo
+
+The video was recorded from the running application. [Watch the ReviewWise demo on YouTube](https://www.youtube.com/watch?v=BEC7LJjvb2o).
 
 ## 4. Architecture
 
-![ReviewWise M3 architecture](https://github.com/abdai-eman/reviewwise-ai/raw/refs/heads/m3-mvp/docs/architecture.svg)
+![ReviewWise M3 architecture](docs/architecture.svg)
 
 The Streamlit interface passes reviews to a background worker, which calls Ollama on the same computer. Qwen returns complaint categories and references to passages containing complaints or praise. Python validates those references, counts distinct reviews per complaint category, and builds the report. A temporary session cache can reuse validated results. Users can save reports locally or export them. Review text stays on the computer during analysis. Initial setup contacts external services to download software and model files. Local inference requires no API key.
 
 ## 5. AI components
 
-In M2, we tested local Qwen2.5 3B on fictional multilingual reviews. The scripts, prompts, and outputs are preserved in the [M2 experiments](https://github.com/abdai-eman/reviewwise-ai/blob/m3-mvp/experiments/README.md).
+In M2, we tested local Qwen2.5 3B on fictional multilingual reviews. The scripts, prompts, and outputs are preserved in the [M2 experiments](experiments/README.md).
 
-In M3, the app uses **Qwen2.5 3B (`qwen2.5:3b`)** through the local Ollama API. The [extraction prompt](https://github.com/abdai-eman/reviewwise-ai/blob/m3-mvp/reviewwise/prompts.py), [model and category configuration](https://github.com/abdai-eman/reviewwise-ai/blob/m3-mvp/reviewwise/config.py), and [analysis pipeline](https://github.com/abdai-eman/reviewwise-ai/blob/m3-mvp/reviewwise/pipeline.py) are in the repository.
+In M3, the app uses **Qwen2.5 3B (`qwen2.5:3b`)** through the local Ollama API. The repository contains the [extraction prompt](reviewwise/prompts.py), [model and category configuration](reviewwise/config.py), and [analysis pipeline](reviewwise/pipeline.py).
 
 Fresh review analysis calls the actual model to identify complaints and positive feedback. Python checks the returned evidence references against the supplied reviews and counts each review once per complaint category. The report shows the counts alongside the original passages. Suggested actions use fixed templates tied to the extracted categories. A saved report can be reopened without another model call.
 
@@ -57,15 +57,15 @@ Fresh review analysis calls the actual model to identify complaints and positive
 
 Team members tested ReviewWise on each other's laptops and encountered no issues during those tests.
 
-**M3 real-input test:** The [demo video](https://www.youtube.com/watch?v=BEC7LJjvb2o) shows ReviewWise analysing real customer reviews with the local model and displaying the resulting report.
+**M3 real-input test:** ReviewWise analyses real customer reviews with the local model and displays the resulting report in the [demo video](https://www.youtube.com/watch?v=BEC7LJjvb2o).
 
-The [Windows CI run](https://github.com/abdai-eman/reviewwise-ai/actions/runs/42397705242) separately verified the full path from fresh fictional input through the actual local model to the report shown in the app. It also passed 79 automated tests and verified the Windows package and launcher.
+Windows CI separately verified the full path from fresh fictional input through the actual local model to the report shown in the app. It also passed 79 automated tests and verified the Windows package and launcher. [View the Windows CI run](https://github.com/abdai-eman/reviewwise-ai/actions/runs/42397705242).
 
 ## 7. Limitations, risks, privacy and ethics
 
 1. The model can miss or misclassify complaints and praise. Users should check the original passages before acting on a finding.
 2. Local analysis can be slow on laptops with limited memory.
-3. The "Other" category can group unrelated complaints.
+3. The “Other” category can group unrelated complaints.
 4. The reporting week is selected by the user. The app does not verify or filter review dates.
 
 Reviews are processed locally. Saved reports contain original review text. Use reviews you have permission to process and remove unnecessary personal information before sharing a CSV or report.
@@ -74,7 +74,7 @@ Reviews are processed locally. Saved reports contain original review text. Use r
 
 Our early customer research focused on small hospitality businesses in Luxembourg. The café supervisor we interviewed was interested in practical improvement suggestions. The hotel receptionist reported spending less than 30 minutes per week handling reviews and saw more potential value for larger hotels.
 
-Local inference has no metered API fee. Pricing and willingness to pay remain open, and hardware and electricity costs have not been measured. See the [project log](https://github.com/abdai-eman/reviewwise-ai/blob/m3-mvp/PROJECT_LOG.md) for the M1 interviews and the M2 cost estimate.
+Local inference has no metered API fee. Pricing and willingness to pay remain open, and hardware and electricity costs have not been measured. The M1 interviews and M2 cost estimate are in the [project log](PROJECT_LOG.md).
 
 ## 9. AI tools the team used
 
