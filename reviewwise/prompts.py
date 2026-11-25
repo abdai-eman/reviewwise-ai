@@ -34,6 +34,9 @@ complaints lists explicit problems with these categories:
 slow_service: waiting or slow service (lues); cold_coffee: cold coffee (froid, kal);
 high_prices: expensive; dirty_tables: unclean tables; incorrect_order: wrong order;
 unfriendly_staff: rude or not friendly; other: another explicit problem.
+Use a named category only when the unit matches its meaning exactly; cold_coffee
+means the drink was not hot enough, nothing else. Problems with taste, noise,
+music, portion size, waiting area or anything else use other.
 Mixed reviews may have both. Empty arrays mean none found.
 Return IDs and labels only. Never write quotes, translations, counts or explanations.
 """
