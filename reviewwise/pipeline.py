@@ -204,7 +204,7 @@ def extraction_cache_key(review, digest):
     """Reuse only identical input, model weights, prompt, schema and settings."""
     payload = {
         "review": review.text, "model": MODEL, "digest": digest, "host": OLLAMA_URL,
-        "prompt": COMPACT_PROMPT, "schema": Packet.model_json_schema(), "units_version": 1,
+        "prompt": COMPACT_PROMPT, "schema": Packet.model_json_schema(), "units_version": 2,
         "options": generation_options([review]),
     }
     return hashlib.sha256(json.dumps(payload, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()

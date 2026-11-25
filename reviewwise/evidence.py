@@ -27,8 +27,10 @@ class Packet(BaseModel):
 
 def evidence_units(text):
     # Every unit remains an exact substring; the original review supplies context.
+    # M4: also split on "and" (EN/FR/DE/LU) so two complaints in one sentence get two units
+    # (evaluation cases H01, H08, H20 lost their second complaint).
     return [part.strip() for part in re.split(
-        r"(?<=[.!?;])\s+|\n+|\s+(?:but|mais|aber|mee)\s+", text, flags=re.IGNORECASE,
+        r"(?<=[.!?;])\s+|\n+|\s+(?:but|mais|aber|mee|and|et|und|an)\s+", text, flags=re.IGNORECASE,
     ) if part.strip()]
 
 

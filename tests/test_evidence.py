@@ -25,6 +25,17 @@ class EvidenceTests(unittest.TestCase):
                 self.assertIn(units[0], text)
                 self.assertIn(units[1], text)
 
+    def test_two_complaints_joined_by_and_become_separate_units(self):
+        cases = {
+            'The barista was rude and my latte arrived cold.': ['The barista was rude', 'my latte arrived cold.'],
+            'Les tables étaient sales et le personnel impoli.': ['Les tables étaient sales', 'le personnel impoli.'],
+            'Der Kaffee war lauwarm und die Preise zu hoch.': ['Der Kaffee war lauwarm', 'die Preise zu hoch.'],
+            'Mir hu laang gewaart an de Kaffi war kal.': ['Mir hu laang gewaart', 'de Kaffi war kal.'],
+        }
+        for text, expected in cases.items():
+            with self.subTest(text=text):
+                self.assertEqual(evidence_units(text), expected)
+
     def test_missing_duplicate_unknown_review_ids_and_invalid_evidence_are_rejected(self):
         valid = {'id': 1, 'positive': [], 'complaints': [{'unit': 0, 'category': 'cold_coffee'}]}
         invalid = [
