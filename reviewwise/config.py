@@ -3,6 +3,8 @@ OLLAMA_URL = "http://127.0.0.1:11434"
 MAX_REVIEWS = 1000
 MAX_REVIEW_LENGTH = 2000
 REQUEST_TIMEOUT = 60.0
+# M4: groups of 4 let labels leak between reviews (evaluation case W29); 1 is as fast.
+REVIEWS_PER_REQUEST = 1
 
 CATEGORIES = {
     "slow_service": "Slow service",

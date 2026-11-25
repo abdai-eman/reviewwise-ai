@@ -4,7 +4,7 @@ import re
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from reviewwise.config import CATEGORIES
+from reviewwise.config import CATEGORIES, REVIEWS_PER_REQUEST
 
 
 class Tag(BaseModel):
@@ -73,7 +73,7 @@ def review_groups(reviews):
     for review in reviews:
         candidate = group + [review]
         size = len(json.dumps(wire_reviews(candidate), ensure_ascii=False).encode("utf-8"))
-        if group and (len(candidate) > 4 or size > 1500):
+        if group and (len(candidate) > REVIEWS_PER_REQUEST or size > 1500):
             yield group
             group = []
         group.append(review)
