@@ -194,7 +194,7 @@ The 96% means the model correctly classified 67 of 70 reviews as containing or n
 4. Luxembourgish and German price words were missed. We added hint words in French, German and Luxembourgish to the prompt. F1 stayed at 0.83, and the count error fell from 10 to 7.
 5. Expectations ("expected it to be cold but it was hot") and instructions inside a review were labelled as complaints. The prompt now excludes them. Precision on the hard reviews reached 100%.
 
-Each change is supplied as a separate patch and will be committed separately.
+Each change is committed separately on the `m4-evaluation` branch: issue 1 [aac8dbb](https://github.com/abdai-eman/reviewwise-ai/commit/aac8dbb17373e36a757a81c2bb9bd0039efb4297), issue 2 [bb3a679](https://github.com/abdai-eman/reviewwise-ai/commit/bb3a6792d83d3bee4f04287fdc82485fd0207ef0), issue 3 [80251b3](https://github.com/abdai-eman/reviewwise-ai/commit/80251b36e56247f2b69c9778ab76bc1e244150f1), issue 4 [16876a6](https://github.com/abdai-eman/reviewwise-ai/commit/16876a619fa7f63bc531d83ab31c50a9bd1cd1e2), issue 5 [5c0a838](https://github.com/abdai-eman/reviewwise-ai/commit/5c0a838f888252ab55d15ec477424b115193447f).
 
 ### Failure cases
 

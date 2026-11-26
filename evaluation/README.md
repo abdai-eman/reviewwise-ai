@@ -105,7 +105,7 @@ Cost per interaction is €0 in API fees because inference is local.
 
 ## Issues found and addressed
 
-Each change is supplied as a separate patch and will be committed separately.
+Each change is committed separately on the `m4-evaluation` branch: issue 1 [aac8dbb](https://github.com/abdai-eman/reviewwise-ai/commit/aac8dbb17373e36a757a81c2bb9bd0039efb4297), issue 2 [bb3a679](https://github.com/abdai-eman/reviewwise-ai/commit/bb3a6792d83d3bee4f04287fdc82485fd0207ef0), issue 3 [80251b3](https://github.com/abdai-eman/reviewwise-ai/commit/80251b36e56247f2b69c9778ab76bc1e244150f1), issue 4 [16876a6](https://github.com/abdai-eman/reviewwise-ai/commit/16876a619fa7f63bc531d83ab31c50a9bd1cd1e2), issue 5 [5c0a838](https://github.com/abdai-eman/reviewwise-ai/commit/5c0a838f888252ab55d15ec477424b115193447f).
 
 | # | Issue (evidence) | Change | Effect on F1 |
 |---|---|---|---|
