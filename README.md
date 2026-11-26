@@ -110,14 +110,8 @@ In M4, the approach stayed local, so there is still no API fee. Analysis takes a
 
 ## 10. Who did what
 
-### Contributions since M2
+### Contributions since M2-M4
 
-- **MAKNI Abdourrahmane:** Reviewed the full project, tested the application, and created the demo video.
-- **HAFT Benjamin:** Contributed to application development and helped write the README.
-- **ABDAI Eman:** Developed ReviewWise with Codex assistance and worked on the M3 summary PDF and project log.
-
-### M4 contributions
-
-- **MAKNI Abdourrahmane:** Evaluated and hand-wrote the expected labels for the test cases, and inspected the evaluation results for each M4 fix.
-- **HAFT Benjamin:** Contributed to application development, helped write the README, ran the evaluation iteration fixes.
-- **ABDAI Eman:** Evaluated and hand-wrote the expected labels for the test cases, and inspected the evaluation results for each M4 fix.
+- **MAKNI Abdourrahmane:** Reviewed the full project, tested the application, created the demo video, inspected results for each M4 fix.
+- **HAFT Benjamin:** Contributed to application development, helped write the README, created and ran evaluation iteration fixes, evaluated and inspected results for each M4 fix.
+- **ABDAI Eman:** Developed ReviewWise with Codex assistance, worked on the M3 summary PDF and project log, evaluated and hand-wrote the expected labels for test cases, inspected results for each M4 fix.
