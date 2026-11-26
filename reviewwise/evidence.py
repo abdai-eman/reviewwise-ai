@@ -4,7 +4,7 @@ import re
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from reviewwise.config import CATEGORIES
+from reviewwise.config import CATEGORIES, REVIEWS_PER_REQUEST
 
 
 class Tag(BaseModel):
@@ -27,8 +27,10 @@ class Packet(BaseModel):
 
 def evidence_units(text):
     # Every unit remains an exact substring; the original review supplies context.
+    # M4: also split on "and" (EN/FR/DE/LU) so two complaints in one sentence get two units
+    # (evaluation cases H01, H08, H20 lost their second complaint).
     return [part.strip() for part in re.split(
-        r"(?<=[.!?;])\s+|\n+|\s+(?:but|mais|aber|mee)\s+", text, flags=re.IGNORECASE,
+        r"(?<=[.!?;])\s+|\n+|\s+(?:but|mais|aber|mee|and|et|und|an)\s+", text, flags=re.IGNORECASE,
     ) if part.strip()]
 
 
@@ -73,7 +75,7 @@ def review_groups(reviews):
     for review in reviews:
         candidate = group + [review]
         size = len(json.dumps(wire_reviews(candidate), ensure_ascii=False).encode("utf-8"))
-        if group and (len(candidate) > 4 or size > 1500):
+        if group and (len(candidate) > REVIEWS_PER_REQUEST or size > 1500):
             yield group
             group = []
         group.append(review)

@@ -10,7 +10,7 @@ from unittest.mock import Mock, patch
 import httpx
 from pydantic import ValidationError
 
-from reviewwise.config import MAX_REVIEWS, MODEL
+from reviewwise.config import MAX_REVIEWS, MODEL, REVIEWS_PER_REQUEST
 from reviewwise.pipeline import (
     Analysis, BatchResult, Extraction, Review, ReviewWiseError, analyze_reviews,
     complaint_rows, extract_review, make_reviews, require_model,
@@ -160,7 +160,7 @@ class SessionReuseTests(unittest.TestCase):
         reviews = make_reviews([f"Cold coffee, review {i}." for i in range(1, 81)])
         cache = {}
         first = analyze_reviews(reviews, cache=cache)
-        self.assertEqual(self.client.chat.call_count, 20)
+        self.assertEqual(self.client.chat.call_count, -(-80 // REVIEWS_PER_REQUEST))
         self.assertEqual(len(first.analyses), 80)
         self.assertEqual(first.reused_reviews, 0)
         self.client.chat.reset_mock()
@@ -181,10 +181,16 @@ class SessionReuseTests(unittest.TestCase):
     def test_failed_report_can_resume_from_completed_validated_reviews(self):
         reviews = make_reviews([f"Cold coffee {i}." for i in range(1, 9)])
         cache = {}
-        self.client.chat.side_effect = [
-            self.answer(messages=[None, {"content": json.dumps({"reviews": [{"id": i} for i in range(1, 5)]})}]),
-            ConnectionError("fixture disconnect"),
-        ]
+        answered = []
+
+        def first_four_then_disconnect(**kwargs):
+            ids = [item["id"] for item in json.loads(kwargs["messages"][1]["content"])["reviews"]]
+            if len(answered) >= 4:
+                raise ConnectionError("fixture disconnect")
+            answered.extend(ids)
+            return self.answer(**kwargs)
+
+        self.client.chat.side_effect = first_four_then_disconnect
         partial = analyze_reviews(reviews, cache=cache)
         self.assertEqual(len(partial.analyses), 4)
         self.assertEqual(len(partial.pending), 4)
@@ -193,7 +199,7 @@ class SessionReuseTests(unittest.TestCase):
         self.client.chat.reset_mock()
         self.client.chat.side_effect = self.answer
         result = analyze_reviews(reviews, cache=cache)
-        self.assertEqual(self.client.chat.call_count, 1)
+        self.assertEqual(self.client.chat.call_count, -(-4 // REVIEWS_PER_REQUEST))
         self.assertEqual(result.reused_reviews, 4)
         self.assertEqual(len(result.analyses), 8)
 

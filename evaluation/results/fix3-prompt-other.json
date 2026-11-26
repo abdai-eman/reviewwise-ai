@@ -1,0 +1,127 @@
+{
+  "label": "fix3-prompt-other",
+  "system": "model",
+  "group_size": "app default",
+  "run_at": "2026-11-23T20:03:35+01:00",
+  "latency": {
+    "total_seconds": 21.67,
+    "seconds_per_review": 0.31,
+    "request_median_seconds": 0.29,
+    "request_max_seconds": 0.48
+  },
+  "failures": 0,
+  "ai_requests": 70,
+  "model": "qwen2.5:3b",
+  "model_digest": "357c53fb659c5076de1d65ccb0b397446227b71a42be9d1603d46168015c9e4b",
+  "metrics": {
+    "overall": {
+      "cases": 70,
+      "exact_match": 0.8571428571428571,
+      "complaint_detection_accuracy": 0.9142857142857143,
+      "precision": 0.8823529411764706,
+      "recall": 0.7894736842105263,
+      "f1": 0.8333333333333333,
+      "tp": 30,
+      "fp": 4,
+      "fn": 8,
+      "count_abs_error": 10,
+      "gold_counts": {
+        "slow_service": 7,
+        "cold_coffee": 5,
+        "high_prices": 6,
+        "dirty_tables": 4,
+        "incorrect_order": 4,
+        "unfriendly_staff": 5,
+        "other": 7
+      },
+      "predicted_counts": {
+        "slow_service": 6,
+        "cold_coffee": 7,
+        "high_prices": 5,
+        "dirty_tables": 4,
+        "incorrect_order": 3,
+        "unfriendly_staff": 6,
+        "other": 3
+      },
+      "top_issue_gold": [
+        "other",
+        "slow_service"
+      ],
+      "top_issue_predicted": [
+        "cold_coffee"
+      ]
+    },
+    "hard": {
+      "cases": 20,
+      "exact_match": 0.8,
+      "complaint_detection_accuracy": 0.9,
+      "precision": 0.95,
+      "recall": 0.8636363636363636,
+      "f1": 0.9047619047619048,
+      "tp": 19,
+      "fp": 1,
+      "fn": 3,
+      "count_abs_error": 2,
+      "gold_counts": {
+        "slow_service": 3,
+        "cold_coffee": 4,
+        "high_prices": 3,
+        "dirty_tables": 2,
+        "incorrect_order": 4,
+        "unfriendly_staff": 5,
+        "other": 1
+      },
+      "predicted_counts": {
+        "slow_service": 2,
+        "cold_coffee": 4,
+        "high_prices": 3,
+        "dirty_tables": 2,
+        "incorrect_order": 3,
+        "unfriendly_staff": 5,
+        "other": 1
+      },
+      "top_issue_gold": [
+        "unfriendly_staff"
+      ],
+      "top_issue_predicted": [
+        "unfriendly_staff"
+      ]
+    },
+    "workbook": {
+      "cases": 50,
+      "exact_match": 0.88,
+      "complaint_detection_accuracy": 0.92,
+      "precision": 0.7857142857142857,
+      "recall": 0.6875,
+      "f1": 0.7333333333333334,
+      "tp": 11,
+      "fp": 3,
+      "fn": 5,
+      "count_abs_error": 8,
+      "gold_counts": {
+        "slow_service": 4,
+        "cold_coffee": 1,
+        "high_prices": 3,
+        "dirty_tables": 2,
+        "incorrect_order": 0,
+        "unfriendly_staff": 0,
+        "other": 6
+      },
+      "predicted_counts": {
+        "slow_service": 4,
+        "cold_coffee": 3,
+        "high_prices": 2,
+        "dirty_tables": 2,
+        "incorrect_order": 0,
+        "unfriendly_staff": 1,
+        "other": 2
+      },
+      "top_issue_gold": [
+        "other"
+      ],
+      "top_issue_predicted": [
+        "slow_service"
+      ]
+    }
+  }
+}

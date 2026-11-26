@@ -163,3 +163,52 @@ The demo was recorded from the running application. [Watch the ReviewWise demo o
 - **MAKNI Abdourrahmane:** Reviewed the full project, tested the application, and created the demo video.
 - **HAFT Benjamin:** Contributed to application development and helped write the README.
 - **ABDAI Eman:** Developed ReviewWise with Codex assistance and worked on the M3 summary PDF and project log.
+
+## M4 — Testing and Iteration
+
+**Date:** 30 November 2026
+
+### Evaluation
+
+We tested whether ReviewWise finds the right complaint categories in each review. A review is correct when the predicted set of categories matches our hand-written labels exactly. Our main metric is F1 over (review, category) pairs. We also report how often the app correctly says whether a review contains a complaint at all (complaint yes/no accuracy), the error in the complaint counts shown to the owner, and latency.
+
+We used 70 fictional reviews: the 50 reviews in [Workbook1.csv](examples/Workbook1.csv) and 20 harder reviews. The harder ones cover wrong orders, unfriendly staff, reviews with two complaints, negation, sarcasm and an attempted prompt injection. Our baseline is a simple keyword matcher with no AI. The data, script and every result are in [evaluation/](evaluation/README.md).
+
+### Results before and after
+
+| Version | F1 | Precision | Recall | Complaint yes/no accuracy | Count error | Worst request |
+|---|---|---|---|---|---|---|
+| Keyword baseline (no AI) | 0.86 | 94% | 79% | 86% | 10 | — |
+| M3 model (before) | 0.71 | 74% | 68% | 94% | 13 | 1.36 s |
+| After fixes 1–5 | 0.83 | 88% | 79% | 96% | 10 | 0.48 s |
+
+After the fixes, F1 by language is: English 0.95, French 1.00, German 0.84 and Luxembourgish 0.50. The keyword baseline scores 0.70, 0.93, 0.95 and 0.88. The model is now better than keywords in English and French but clearly worse in Luxembourgish.
+
+The 96% means the model correctly classified 67 of 70 reviews as containing or not containing a complaint. Of the 32 reviews that actually contain a complaint, it detected one in 29 (about 91%).
+
+### Issues found and changes made
+
+1. Reviews sent to the model in the same request influenced each other, so a slow-service review was tagged as high prices. We now send one review per request. F1 rose from 0.71 to 0.75, and the worst request time fell from 1.36 s to 0.47 s.
+2. When two complaints were joined by "and", only one was found. Review text is now also split on "and / et / und / an". F1 rose to 0.78.
+3. Complaints that fit no category were forced into a named one: two noise complaints ("La salle était trop bruyante à midi." and "The music was far too loud…") were labelled unfriendly staff. The prompt now says to use "other" unless a category matches exactly, and both are now "other". F1 rose to 0.83.
+4. Luxembourgish and German price words were missed. We added hint words in French, German and Luxembourgish to the prompt. F1 stayed at 0.83, and the count error fell from 10 to 7.
+5. Expectations ("expected it to be cold but it was hot") and instructions inside a review were labelled as complaints. The prompt now excludes them. Precision on the hard reviews reached 100%.
+
+Each change is committed separately on the `m4-evaluation` branch: issue 1 [aac8dbb](https://github.com/abdai-eman/reviewwise-ai/commit/aac8dbb17373e36a757a81c2bb9bd0039efb4297), issue 2 [bb3a679](https://github.com/abdai-eman/reviewwise-ai/commit/bb3a6792d83d3bee4f04287fdc82485fd0207ef0), issue 3 [80251b3](https://github.com/abdai-eman/reviewwise-ai/commit/80251b36e56247f2b69c9778ab76bc1e244150f1), issue 4 [16876a6](https://github.com/abdai-eman/reviewwise-ai/commit/16876a619fa7f63bc531d83ab31c50a9bd1cd1e2), issue 5 [5c0a838](https://github.com/abdai-eman/reviewwise-ai/commit/5c0a838f888252ab55d15ec477424b115193447f).
+
+### Failure cases
+
+- **"Et war leider zimlech haart am Café."** (too loud) → labelled *cold coffee*, expected *other*.
+- **"De Service war gutt mee e bësse lues."** (a bit slow) → labelled *cold coffee*, expected *slow service*. This was correct before fix 4.
+- **"Ze deier fir e Kaffi."** (too expensive) → no complaint found, expected *high prices*.
+
+All three are Luxembourgish. The 3B model often falls back to "cold coffee" when it does not understand a review. On Workbook1 this makes "cold coffee" the top issue, although only one review mentions cold coffee.
+
+### Cost
+
+The approach did not change, so there is still no API fee. Each review is now one model request, at about 0.3 s per review on an Apple M5 Pro laptop. Hardware and electricity costs are still not measured.
+
+### Next steps
+
+- Improve Luxembourgish, for example by combining keyword rules with the model or by testing a larger model.
+- Write about 15 new reviews that we did not use while making the fixes, to check that the fixes were not tuned to this test set.
